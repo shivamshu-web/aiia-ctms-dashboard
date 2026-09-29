@@ -1,0 +1,96 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  PRINCIPAL_INVESTIGATOR
+  RESEARCH_COORDINATOR
+  ETHICS_COMMITTEE
+  SAFETY_OFFICER
+}
+
+enum StudyPhase {
+  PHASE_I
+  PHASE_II
+  PHASE_III
+  PHASE_IV
+}
+
+enum StudyStatus {
+  PLANNING
+  ONGOING
+  ON_HOLD
+  COMPLETED
+}
+
+enum SeverityLevel {
+  MILD
+  MODERATE
+  SERIOUS
+  PENDING
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      Role     @default(PRINCIPAL_INVESTIGATOR)
+  createdAt DateTime @default(now())
+  studies   Study[]  @relation("InvestigatorStudies")
+}
+
+model Study {
+  id              String           @id @default(uuid())
+  studyCode       String           @unique
+  title           String
+  phase           StudyPhase
+  sitesCount      Int              @default(1)
+  targetPatients  Int
+  enrolledCount   Int              @default(0)
+  status          StudyStatus      @default(PLANNING)
+  ctriNumber      String?
+  investigatorId  String
+  investigator    User             @relation("InvestigatorStudies", fields: [investigatorId], references: [id])
+  patients        Patient[]
+  adverseEvents   AdverseEvent[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Patient {
+  id             String         @id @default(uuid())
+  patientCode    String         @unique
+  gender         String
+  age            Int
+  enrolledAt     DateTime       @default(now())
+  studyId        String
+  study          Study          @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  adverseEvents  AdverseEvent[]
+}
+
+model AdverseEvent {
+  id           String        @id @default(uuid())
+  reportType   String
+  description  String
+  severity     SeverityLevel @default(PENDING)
+  reportedDate DateTime      @default(now())
+  deadlineDate DateTime?
+  studyId      String
+  study        Study         @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  patientId    String
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  userEmail String
+  details   String
+  timestamp DateTime @default(now())
+}
