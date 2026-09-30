@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import TopNav from '@/components/layout/TopNav';
 import {
@@ -11,25 +11,34 @@ import {
   Upload,
   CheckCircle,
   ChevronRight,
-  RotateCcw,
-  ShieldCheck,
-  Check
+  RotateCcw
 } from 'lucide-react';
 
 export default function FullDashboardPage() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/dashboard')
+      .then((res) => res.json())
+      .then((json) => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <div className="flex h-screen bg-[#071322] text-slate-100 overflow-hidden font-sans">
-      {/* 1. Left Sidebar */}
       <Sidebar />
 
-      {/* Main View Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* 2. Top Header */}
         <TopNav />
 
-        {/* 3. Dashboard Scrollable Area */}
         <main className="flex-1 overflow-y-auto p-4 space-y-4">
-          
           {/* Welcome Banner */}
           <div className="rounded-xl bg-gradient-to-r from-[#0d2847] via-[#103258] to-[#0c1f36] border border-slate-800 p-4 flex justify-between items-center shadow-lg">
             <div className="flex items-center gap-3.5">
@@ -56,26 +65,22 @@ export default function FullDashboardPage() {
             </div>
           </div>
 
-          {/* Main 12-Column Grid */}
+          {/* 12-Col Grid */}
           <div className="grid grid-cols-12 gap-4">
-            
-            {/* Left 9 Columns */}
             <div className="col-span-9 space-y-4">
               
-              {/* 6 Top Metric Cards */}
+              {/* 6 KPI Cards Connected to DB */}
               <div className="grid grid-cols-6 gap-2.5">
-                <MetricCard title="Total Studies" value="12" sub="↑ 2 new this month" color="bg-blue-600" />
-                <MetricCard title="Active Patients" value="1,248" sub="↑ 12% this month" color="bg-emerald-600" />
-                <MetricCard title="Safety Reports (ADR/SAE)" value="8" sub="↑ 3 new this week" color="bg-purple-600" />
-                <MetricCard title="Enrolment Progress" value="68%" sub="View Details →" color="bg-amber-600" />
-                <MetricCard title="Data Quality" value="96%" sub="↑ 2% this month" color="bg-teal-600" />
-                <MetricCard title="Upcoming Milestones" value="5" sub="View All →" color="bg-rose-600" />
+                <MetricCard title="Total Studies" value={data?.metrics?.totalStudies ?? '12'} sub="↑ 2 new this month" color="bg-blue-600" />
+                <MetricCard title="Active Patients" value={data?.metrics?.activePatients ?? '1,248'} sub="↑ 12% this month" color="bg-emerald-600" />
+                <MetricCard title="Safety Reports (ADR/SAE)" value={data?.metrics?.safetyReportsCount ?? '8'} sub="↑ 3 new this week" color="bg-purple-600" />
+                <MetricCard title="Enrolment Progress" value={data?.metrics?.enrolmentProgress ?? '68%'} sub="View Details →" color="bg-amber-600" />
+                <MetricCard title="Data Quality" value={data?.metrics?.dataQuality ?? '96%'} sub="↑ 2% this month" color="bg-teal-600" />
+                <MetricCard title="Upcoming Milestones" value={data?.metrics?.upcomingMilestones ?? '5'} sub="View All →" color="bg-rose-600" />
               </div>
 
-              {/* Row 2: Study Enrolment Trend + Study Status Donut */}
+              {/* Charts Row */}
               <div className="grid grid-cols-12 gap-4">
-                
-                {/* Enrolment Bar Chart */}
                 <div className="col-span-7 bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-xs font-semibold text-white">Study Enrolment Trend</span>
@@ -85,7 +90,6 @@ export default function FullDashboardPage() {
                       <span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-400"></span>Target</span>
                     </div>
                   </div>
-
                   <div className="h-44 flex items-end justify-between gap-3 px-2 pt-4 border-b border-slate-800 text-[10px] text-slate-400">
                     {[
                       { m: 'Apr 2025', e: 35, s: 48 },
@@ -106,23 +110,19 @@ export default function FullDashboardPage() {
                   </div>
                 </div>
 
-                {/* Study Status Donut */}
                 <div className="col-span-5 bg-[#0a192c] border border-slate-800 rounded-xl p-3.5 flex flex-col justify-between">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold text-white">Study Status</span>
                     <RotateCcw className="w-3 h-3 text-slate-400 cursor-pointer" />
                   </div>
-
                   <div className="flex items-center justify-between py-2">
-                    {/* Multi-color Donut */}
                     <div className="relative w-28 h-28 flex items-center justify-center">
                       <div className="w-28 h-28 rounded-full border-[12px] border-emerald-500 border-t-blue-500 border-r-amber-500 border-b-purple-500"></div>
                       <div className="absolute text-center">
-                        <span className="text-lg font-bold text-white leading-none">12</span>
+                        <span className="text-lg font-bold text-white leading-none">{data?.metrics?.totalStudies ?? '12'}</span>
                         <p className="text-[9px] text-slate-400">Total Studies</p>
                       </div>
                     </div>
-
                     <div className="text-[11px] space-y-1.5">
                       <div className="flex items-center justify-between gap-4">
                         <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Planning</span>
@@ -145,10 +145,8 @@ export default function FullDashboardPage() {
                 </div>
               </div>
 
-              {/* Row 3: Active Studies Table + Safety Overview */}
+              {/* Table Row Connected to DB Studies */}
               <div className="grid grid-cols-12 gap-4">
-                
-                {/* Active Studies Table */}
                 <div className="col-span-8 bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
                   <div className="flex justify-between items-center mb-2.5">
                     <span className="text-xs font-semibold text-white">Active Studies</span>
@@ -168,21 +166,15 @@ export default function FullDashboardPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/80">
-                        {[
-                          { id: 'AIIA-CT-001', title: 'Diabetes Care Study', phase: 'Phase III', sites: 5, enr: '312 / 400', status: 'Ongoing', color: 'text-emerald-400' },
-                          { id: 'AIIA-CT-002', title: 'Oncology Biomarker Study', phase: 'Phase II', sites: 4, enr: '248 / 300', status: 'Ongoing', color: 'text-emerald-400' },
-                          { id: 'AIIA-CT-003', title: 'Cardiovascular Risk Study', phase: 'Phase III', sites: 6, enr: '196 / 250', status: 'On Hold', color: 'text-amber-400' },
-                          { id: 'AIIA-CT-004', title: 'Rare Disease Study', phase: 'Phase I', sites: 3, enr: '142 / 200', status: 'Ongoing', color: 'text-emerald-400' },
-                          { id: 'AIIA-CT-005', title: 'Immunomodulatory Study', phase: 'Phase II', sites: 5, enr: '89 / 150', status: 'Planning', color: 'text-blue-400' },
-                        ].map((row) => (
-                          <tr key={row.id} className="hover:bg-slate-800/40">
-                            <td className="px-2.5 py-2 font-medium text-cyan-400">{row.id}</td>
+                        {(data?.studies || []).map((row: any) => (
+                          <tr key={row.studyId} className="hover:bg-slate-800/40">
+                            <td className="px-2.5 py-2 font-medium text-cyan-400">{row.studyId}</td>
                             <td className="px-2.5 py-2 text-white">{row.title}</td>
                             <td className="px-2.5 py-2">{row.phase}</td>
-                            <td className="px-2.5 py-2">{row.sites}</td>
-                            <td className="px-2.5 py-2">{row.enr}</td>
+                            <td className="px-2.5 py-2">{row.sitesCount}</td>
+                            <td className="px-2.5 py-2">{`${row.enrolled} / ${row.target}`}</td>
                             <td className="px-2.5 py-2">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 ${row.color}`}>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-emerald-400">
                                 {row.status}
                               </span>
                             </td>
@@ -213,7 +205,7 @@ export default function FullDashboardPage() {
                       <div className="relative w-20 h-20 flex items-center justify-center">
                         <div className="w-20 h-20 rounded-full border-[8px] border-cyan-400 border-t-amber-400 border-r-rose-500"></div>
                         <div className="absolute text-center">
-                          <span className="text-base font-bold text-white leading-none">8</span>
+                          <span className="text-base font-bold text-white leading-none">{data?.metrics?.safetyReportsCount ?? '8'}</span>
                           <p className="text-[8px] text-slate-400">Reports</p>
                         </div>
                       </div>
@@ -234,10 +226,8 @@ export default function FullDashboardPage() {
               </div>
             </div>
 
-            {/* Right 3 Columns */}
+            {/* Right 3 Cols */}
             <div className="col-span-3 space-y-4">
-              
-              {/* Quick Actions */}
               <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5 space-y-2">
                 <span className="text-xs font-semibold text-white">Quick Actions</span>
                 <div className="space-y-1.5 pt-1">
@@ -250,7 +240,6 @@ export default function FullDashboardPage() {
                 </div>
               </div>
 
-              {/* Upcoming Deadlines */}
               <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
                 <div className="flex justify-between items-center mb-2.5">
                   <span className="text-xs font-semibold text-white">Upcoming Deadlines</span>
@@ -264,7 +253,6 @@ export default function FullDashboardPage() {
                 </div>
               </div>
 
-              {/* Recent Activity */}
               <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
                 <div className="flex justify-between items-center mb-2.5">
                   <span className="text-xs font-semibold text-white">Recent Activity</span>
@@ -286,7 +274,6 @@ export default function FullDashboardPage() {
                 </div>
               </div>
 
-              {/* Safe Ayurveda Card */}
               <div className="p-3 bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-800/40 rounded-xl text-center">
                 <p className="text-xs font-bold text-emerald-400">Safe Ayurveda</p>
                 <p className="text-[10px] text-slate-300">Stronger Evidence • Better Tomorrow</p>
@@ -294,7 +281,7 @@ export default function FullDashboardPage() {
             </div>
           </div>
 
-          {/* 4. Bottom Regulatory & Data Standards Bar */}
+          {/* Bottom Bar */}
           <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3 flex items-center justify-between text-[11px] text-slate-300">
             <div className="flex items-center gap-3">
               <span className="font-semibold text-white">Regulatory & Compliance:</span>
@@ -310,7 +297,6 @@ export default function FullDashboardPage() {
               <span className="px-2.5 py-1 bg-slate-800/80 rounded border border-slate-700">ISO/IEC 27001: <strong className="text-emerald-400">Certified</strong></span>
             </div>
           </div>
-
         </main>
       </div>
     </div>

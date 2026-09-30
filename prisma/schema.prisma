@@ -94,3 +94,11 @@ model AuditLog {
   details   String
   timestamp DateTime @default(now())
 }
+model SafetyReport {
+  id        String   @id @default(cuid())
+  type      String   // ADR or SAE
+  severity  String   // Mild, Moderate, Serious, Pending
+  studyId   String
+  status    String   @default("Submitted")
+  createdAt DateTime @default(now())
+}
