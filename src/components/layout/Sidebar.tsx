@@ -2,6 +2,7 @@
 
 import React from 'react';
 import {
+  Leaf,
   LayoutDashboard,
   FolderKanban,
   FileCheck,
@@ -38,20 +39,20 @@ export default function Sidebar({ activeTab = 'dashboard', setActiveTab }: Sideb
 
   return (
     <aside className="w-64 bg-[#050f1a] border-r border-slate-800/80 flex flex-col h-screen text-xs select-none">
-      {/* Brand Header */}
+      {/* Brand Header with Green Leaf Icon & Pure English Subtitle */}
       <div className="p-4 border-b border-slate-800/80 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center font-bold text-emerald-400 text-sm shadow">
-          अ
+        <div className="w-8 h-8 rounded-lg bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow">
+          <Leaf className="w-4 h-4 fill-emerald-500/20 text-emerald-400" />
         </div>
         <div>
           <h2 className="font-bold text-white text-xs leading-tight">All India Institute of Ayurveda</h2>
-          <p className="text-[10px] text-slate-400">अखिल भारतीय आयुर्वेद संस्थान</p>
+          <p className="text-[10px] text-slate-400">Ministry of Ayush • Govt. of India</p>
         </div>
       </div>
 
       {/* Nav List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar">
-        {/* Main Dashboard Link */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+        {/* Main Dashboard */}
         <div>
           <NavItem
             icon={LayoutDashboard}
@@ -105,9 +106,9 @@ export default function Sidebar({ activeTab = 'dashboard', setActiveTab }: Sideb
       <div className="p-3 border-t border-slate-800/80 bg-[#071322]">
         <div className="flex items-center gap-2 text-emerald-400 font-semibold text-[11px]">
           <HeartHandshake className="w-3.5 h-3.5" />
-          <span>Ayurveda for a Healthier Tomorrow</span>
+          <span>Evidence-Based Ayurvedic Medicine</span>
         </div>
-        <p className="text-[9px] text-slate-500 mt-0.5">Research • Safety • Global Trust</p>
+        <p className="text-[9px] text-slate-500 mt-0.5">Clinical Rigor • Patient Safety • Global Trust</p>
       </div>
     </aside>
   );
@@ -122,10 +123,10 @@ function NavItem({ icon: Icon, label, active, onClick, badge }: any) {
     <button
       type="button"
       onClick={onClick}
-      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer text-left ${
         active
           ? 'bg-blue-600/20 text-cyan-400 border border-blue-500/30'
-          : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
+          : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
       }`}
     >
       <div className="flex items-center gap-2.5 truncate">
