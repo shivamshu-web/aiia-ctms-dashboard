@@ -7,14 +7,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-enum Role {
-  ADMIN
-  PRINCIPAL_INVESTIGATOR
-  RESEARCH_COORDINATOR
-  ETHICS_COMMITTEE
-  SAFETY_OFFICER
-}
-
 enum StudyPhase {
   PHASE_I
   PHASE_II
@@ -29,76 +21,56 @@ enum StudyStatus {
   COMPLETED
 }
 
-enum SeverityLevel {
+enum SafetySeverity {
   MILD
   MODERATE
   SERIOUS
   PENDING
 }
 
-model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  role      Role     @default(PRINCIPAL_INVESTIGATOR)
-  createdAt DateTime @default(now())
-  studies   Study[]  @relation("InvestigatorStudies")
+enum SafetyType {
+  ADR
+  SAE
 }
 
 model Study {
-  id              String           @id @default(uuid())
-  studyCode       String           @unique
-  title           String
-  phase           StudyPhase
-  sitesCount      Int              @default(1)
-  targetPatients  Int
-  enrolledCount   Int              @default(0)
-  status          StudyStatus      @default(PLANNING)
-  ctriNumber      String?
-  investigatorId  String
-  investigator    User             @relation("InvestigatorStudies", fields: [investigatorId], references: [id])
-  patients        Patient[]
-  adverseEvents   AdverseEvent[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id             String         @id @default(cuid())
+  studyCode      String         @unique
+  title          String
+  phase          StudyPhase     @default(PHASE_III)
+  sitesCount     Int            @default(1)
+  targetPatients Int            @default(100)
+  enrolledCount  Int            @default(0)
+  status         StudyStatus    @default(PLANNING)
+  ctriNumber     String?
+  patients       Patient[]
+  safetyReports  SafetyReport[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 model Patient {
-  id             String         @id @default(uuid())
-  patientCode    String         @unique
-  gender         String
-  age            Int
-  enrolledAt     DateTime       @default(now())
-  studyId        String
-  study          Study          @relation(fields: [studyId], references: [id], onDelete: Cascade)
-  adverseEvents  AdverseEvent[]
-}
-
-model AdverseEvent {
-  id           String        @id @default(uuid())
-  reportType   String
-  description  String
-  severity     SeverityLevel @default(PENDING)
-  reportedDate DateTime      @default(now())
-  deadlineDate DateTime?
+  id           String    @id @default(cuid())
+  subjectId    String    @unique
   studyId      String
-  study        Study         @relation(fields: [studyId], references: [id], onDelete: Cascade)
-  patientId    String
-  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  study        Study     @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  siteName     String
+  gender       String
+  age          Int
+  enrollmentDate DateTime @default(now())
+  status       String    @default("ACTIVE") // ACTIVE, COMPLETED, WITHDRAWN
+  createdAt    DateTime  @default(now())
 }
 
-model AuditLog {
-  id        String   @id @default(uuid())
-  action    String
-  userEmail String
-  details   String
-  timestamp DateTime @default(now())
-}
 model SafetyReport {
-  id        String   @id @default(cuid())
-  type      String   // ADR or SAE
-  severity  String   // Mild, Moderate, Serious, Pending
-  studyId   String
-  status    String   @default("Submitted")
-  createdAt DateTime @default(now())
+  id           String         @id @default(cuid())
+  reportNumber String         @unique
+  studyId      String
+  study        Study          @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  type         SafetyType     @default(ADR)
+  severity     SafetySeverity @default(MILD)
+  description  String
+  reportedBy   String
+  status       String         @default("SUBMITTED")
+  createdAt    DateTime       @default(now())
 }

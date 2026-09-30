@@ -1,96 +1,398 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import MetricCard from '@/components/dashboard/MetricCard';
-import ActiveStudiesTable from '@/components/tables/ActiveStudiesTable';
-import SafetyChart from '@/components/dashboard/SafetyChart';
-import RecentActivity from '@/components/dashboard/RecentActivity';
-import { Activity, AlertTriangle, CheckCircle2, Clock, PlusCircle, Sparkles, TrendingUp, UserCheck, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  Plus,
+  UserPlus,
+  AlertTriangle,
+  FileSpreadsheet,
+  Upload,
+  CheckCircle,
+  ChevronRight,
+  RotateCcw
+} from 'lucide-react';
+
+import CreateStudyModal from '@/components/CreateStudyModal';
+import AddPatientModal from '@/components/AddPatientModal';
+import ReportSafetyModal from '@/components/ReportSafetyModal';
 
 export default function DashboardPage() {
-  const [studies, setStudies] = useState<any[]>([]);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Modal states
+  const [isCreateStudyOpen, setIsCreateStudyOpen] = useState(false);
+  const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
+  const [isReportSafetyOpen, setIsReportSafetyOpen] = useState(false);
+
+  const refreshData = () => {
+    fetch('/api/dashboard')
+      .then((res) => res.json())
+      .then((json) => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
-    fetch('/api/studies')
-      .then((res) => res.json())
-      .then((data) => setStudies(data))
-      .catch((err) => console.error(err));
+    refreshData();
   }, []);
 
   return (
-    <div className="p-8 space-y-6">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border border-emerald-900/30 p-6 rounded-2xl flex items-center justify-between shadow-xl">
-        <div>
-          <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
-            <Sparkles className="w-4 h-4" />
-            <span>Evidence • Safety • Ayurveda • Global Impact</span>
+    <div className="space-y-4">
+      {/* 1. Welcome Banner */}
+      <div className="rounded-xl bg-gradient-to-r from-[#0d2847] via-[#103258] to-[#0c1f36] border border-slate-800 p-4 flex justify-between items-center shadow-lg">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-full bg-emerald-700/30 border border-emerald-500/40 flex items-center justify-center font-bold text-white text-base shadow">
+            AIIA
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">Welcome, Dr. Meera Sharma</h2>
-          <p className="text-xs text-slate-400 mt-1">Clinical Research | Pharmacovigilance | Better Health for All</p>
-        </div>
-        <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-lg shadow-emerald-900/20 transition">
-          <PlusCircle className="w-4 h-4" />
-          Create New Study
-        </button>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-        <MetricCard title="Total Studies" value={12} tag="+2 this month" icon={Activity} />
-        <MetricCard title="Active Patients" value="1,248" tag="↑ 12% growth" icon={UserCheck} />
-        <MetricCard title="Safety Reports" value={8} tag="↑ 3 new" icon={AlertTriangle} danger />
-        <MetricCard title="Enrolment Progress" value="68%" tag="Target 75%" icon={TrendingUp} />
-        <MetricCard title="Data Quality" value="96%" tag="Verified" icon={CheckCircle2} />
-        <MetricCard title="Upcoming Milestones" value={5} tag="Action needed" icon={Clock} />
-      </div>
-
-      {/* Tables and Charts Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h3 className="text-sm font-bold text-white">Active Clinical Studies</h3>
-              <p className="text-[11px] text-slate-400">Ayush GCP & CDISC Real-time Monitoring</p>
-            </div>
-            <button className="text-xs text-emerald-400 hover:underline">View All</button>
-          </div>
-          <ActiveStudiesTable studies={studies.length ? studies : defaultStudies} />
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
           <div>
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-sm font-bold text-white">Pharmacovigilance (ADR / SAE)</h3>
-              <Shield className="w-4 h-4 text-emerald-400" />
+            <h1 className="text-base font-bold text-white">Welcome, Dr. Meera Sharma</h1>
+            <p className="text-xs text-slate-300 font-medium">All India Institute of Ayurveda (AIIA)</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Clinical Research | Pharmacovigilance | Better Health for All</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <div className="text-right border-r border-slate-700/60 pr-6">
+            <div className="text-[11px] text-slate-300">Tue, 23 Sep 2025</div>
+            <div className="text-sm font-semibold text-white">14:32</div>
+          </div>
+          <div className="text-right space-y-0.5">
+            <div className="text-xs font-semibold text-emerald-400">Traditional Wisdom</div>
+            <div className="text-xs font-semibold text-cyan-400">Scientific Validation</div>
+            <div className="text-xs font-semibold text-white">Global Impact</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Main 12-Column Grid */}
+      <div className="grid grid-cols-12 gap-4">
+        {/* Left 9 Columns */}
+        <div className="col-span-9 space-y-4">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-6 gap-2.5">
+            <MetricCard title="Total Studies" value={data?.metrics?.totalStudies ?? '3'} sub="↑ 2 new this month" color="bg-blue-600" />
+            <MetricCard title="Active Patients" value={data?.metrics?.activePatients ?? '756'} sub="↑ 12% this month" color="bg-emerald-600" />
+            <MetricCard title="Safety Reports (ADR/SAE)" value={data?.metrics?.safetyReportsCount ?? '8'} sub="↑ 3 new this week" color="bg-purple-600" />
+            <MetricCard title="Enrolment Progress" value={data?.metrics?.enrolmentProgress ?? '80%'} sub="View Details →" color="bg-amber-600" />
+            <MetricCard title="Data Quality" value={data?.metrics?.dataQuality ?? '96%'} sub="↑ 2% this month" color="bg-teal-600" />
+            <MetricCard title="Upcoming Milestones" value={data?.metrics?.upcomingMilestones ?? '5'} sub="View All →" color="bg-rose-600" />
+          </div>
+
+          {/* Charts Row */}
+          <div className="grid grid-cols-12 gap-4">
+            {/* Bar Chart */}
+            <div className="col-span-7 bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xs font-semibold text-white">Study Enrolment Trend</span>
+                <div className="flex items-center gap-3 text-[10px]">
+                  <span className="flex items-center gap-1 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Enrolled</span>
+                  <span className="flex items-center gap-1 text-purple-400"><span className="w-2 h-2 rounded-full bg-purple-500"></span>Screened</span>
+                  <span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-400"></span>Target</span>
+                </div>
+              </div>
+              <div className="h-44 flex items-end justify-between gap-3 px-2 pt-4 border-b border-slate-800 text-[10px] text-slate-400">
+                {[
+                  { m: 'Apr 2025', e: 35, s: 48 },
+                  { m: 'May 2025', e: 55, s: 68 },
+                  { m: 'Jun 2025', e: 70, s: 80 },
+                  { m: 'Jul 2025', e: 85, s: 92 },
+                  { m: 'Aug 2025', e: 94, s: 100 },
+                  { m: 'Sep 2025', e: 105, s: 112 },
+                ].map((bar, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                    <div className="w-full flex items-end justify-center gap-1.5 h-36">
+                      <div className="w-3.5 bg-blue-500 rounded-t shadow-sm" style={{ height: `${bar.e}%` }}></div>
+                      <div className="w-3.5 bg-purple-500/80 rounded-t shadow-sm" style={{ height: `${bar.s}%` }}></div>
+                    </div>
+                    <span className="text-[9px]">{bar.m}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="text-[11px] text-slate-400 mb-4">Severity breakdown reported across active trials</p>
-            <SafetyChart />
+
+            {/* Donut Chart */}
+            <div className="col-span-5 bg-[#0a192c] border border-slate-800 rounded-xl p-3.5 flex flex-col justify-between">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-white">Study Status</span>
+                <RotateCcw className="w-3 h-3 text-slate-400 cursor-pointer" />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <div className="relative w-28 h-28 flex items-center justify-center">
+                  <div className="w-28 h-28 rounded-full border-[12px] border-emerald-500 border-t-blue-500 border-r-amber-500 border-b-purple-500"></div>
+                  <div className="absolute text-center">
+                    <span className="text-lg font-bold text-white leading-none">{data?.metrics?.totalStudies ?? '3'}</span>
+                    <p className="text-[9px] text-slate-400">Total Studies</p>
+                  </div>
+                </div>
+                <div className="text-[11px] space-y-1.5">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Planning</span>
+                    <span className="text-slate-300">2 (16.7%)</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>Ongoing</span>
+                    <span className="text-slate-300">7 (58.3%)</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500"></span>On Hold</span>
+                    <span className="text-slate-300">1 (8.3%)</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500"></span>Completed</span>
+                    <span className="text-slate-300">2 (16.7%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-6 p-3 bg-rose-950/20 border border-rose-900/30 rounded-xl text-[11px] text-rose-300">
-            <p className="font-semibold">SAE Mandatory 7-Day Reporting</p>
-            <p className="text-slate-400 mt-0.5">1 pending event flagged for Ethics Committee review.</p>
+          {/* Table & Safety Overview */}
+          <div className="grid grid-cols-12 gap-4">
+            <div className="col-span-8 bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
+              <div className="flex justify-between items-center mb-2.5">
+                <span className="text-xs font-semibold text-white">Active Studies</span>
+                <span className="text-[10px] text-cyan-400 hover:underline cursor-pointer">View All →</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-[11px] text-slate-300">
+                  <thead className="bg-[#11243c] text-slate-400 uppercase text-[9px]">
+                    <tr>
+                      <th className="px-2.5 py-1.5">Study ID</th>
+                      <th className="px-2.5 py-1.5">Title</th>
+                      <th className="px-2.5 py-1.5">Phase</th>
+                      <th className="px-2.5 py-1.5">Sites</th>
+                      <th className="px-2.5 py-1.5">Enrolment</th>
+                      <th className="px-2.5 py-1.5">Status</th>
+                      <th className="px-2.5 py-1.5">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/80">
+                    {(data?.studies || []).map((row: any) => (
+                      <tr key={row.studyId} className="hover:bg-slate-800/40">
+                        <td className="px-2.5 py-2 font-medium text-cyan-400">{row.studyId}</td>
+                        <td className="px-2.5 py-2 text-white">{row.title}</td>
+                        <td className="px-2.5 py-2">{row.phase}</td>
+                        <td className="px-2.5 py-2">{row.sitesCount}</td>
+                        <td className="px-2.5 py-2">{`${row.enrolled} / ${row.target}`}</td>
+                        <td className="px-2.5 py-2">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-emerald-400">
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="px-2.5 py-2 text-slate-400 space-x-1.5">
+                          <span className="hover:text-white cursor-pointer">View</span>
+                          <span>|</span>
+                          <span className="hover:text-white cursor-pointer">Edit</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="col-span-4 bg-[#0a192c] border border-slate-800 rounded-xl p-3.5 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-semibold text-white">Safety Overview</span>
+                  <div className="flex gap-1 text-[10px]">
+                    <span className="bg-[#18395c] text-white px-2 py-0.5 rounded">ADR</span>
+                    <span className="text-slate-400 px-2 py-0.5">SAE</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between py-2">
+                  <div className="relative w-20 h-20 flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full border-[8px] border-cyan-400 border-t-amber-400 border-r-rose-500"></div>
+                    <div className="absolute text-center">
+                      <span className="text-base font-bold text-white leading-none">{data?.metrics?.safetyReportsCount ?? '8'}</span>
+                      <p className="text-[8px] text-slate-400">Reports</p>
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] space-y-1">
+                    <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400"></span>Mild</span><span>4 (50%)</span></div>
+                    <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Moderate</span><span>2 (25%)</span></div>
+                    <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500"></span>Serious</span><span>1 (12.5%)</span></div>
+                    <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400"></span>Pending</span><span>1 (12.5%)</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <button className="w-full bg-[#163a61] hover:bg-[#1f4e82] text-cyan-300 py-1.5 rounded-lg text-xs font-semibold mt-2 transition">
+                View PV Dashboard →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right 3 Columns */}
+        <div className="col-span-3 space-y-4">
+          <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5 space-y-2">
+            <span className="text-xs font-semibold text-white">Quick Actions</span>
+            <div className="space-y-1.5 pt-1">
+              <button
+                onClick={() => setIsCreateStudyOpen(true)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white shadow transition"
+              >
+                <div className="flex items-center gap-2">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Create New Study</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+
+              <button
+                onClick={() => setIsAddPatientOpen(true)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium bg-[#12263f] hover:bg-[#183457] text-slate-200 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Add Patient</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+
+              <button
+                onClick={() => setIsReportSafetyOpen(true)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium bg-[#12263f] hover:bg-[#183457] text-slate-200 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Report ADR/SAE</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+
+              <ActionButton title="Generate Report" icon={FileSpreadsheet} />
+              <ActionButton title="Upload Data" icon={Upload} />
+              <ActionButton title="Check Data Quality" icon={CheckCircle} />
+            </div>
+          </div>
+
+          <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
+            <div className="flex justify-between items-center mb-2.5">
+              <span className="text-xs font-semibold text-white">Upcoming Deadlines</span>
+              <span className="text-[10px] text-cyan-400">View All →</span>
+            </div>
+            <div className="space-y-2 text-[11px]">
+              <DeadlineItem title="CTRI Update Due" study="Study AIIA-CT-001" date="25 Sep 2025" />
+              <DeadlineItem title="Ethics Approval Renewal" study="Study AIIA-CT-003" date="28 Sep 2025" />
+              <DeadlineItem title="Monitoring Visit" study="Site - Chennai" date="30 Sep 2025" />
+              <DeadlineItem title="SAE Reporting (7 days)" study="Study AIIA-CT-002" date="02 Oct 2025" alert />
+            </div>
+          </div>
+
+          <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
+            <div className="flex justify-between items-center mb-2.5">
+              <span className="text-xs font-semibold text-white">Recent Activity</span>
+              <span className="text-[10px] text-cyan-400">View All →</span>
+            </div>
+            <div className="space-y-2.5 text-[10px]">
+              <div>
+                <p className="text-white font-medium">New ADR reported</p>
+                <p className="text-slate-400">Study AIIA-CT-002 • 2h ago</p>
+              </div>
+              <div>
+                <p className="text-white font-medium">Site activation completed</p>
+                <p className="text-slate-400">Site: Varanasi • 4h ago</p>
+              </div>
+              <div>
+                <p className="text-white font-medium">Data query resolved</p>
+                <p className="text-slate-400">Study AIIA-CT-001 • 6h ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-3 bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-800/40 rounded-xl text-center">
+            <p className="text-xs font-bold text-emerald-400">Safe Ayurveda</p>
+            <p className="text-[10px] text-slate-300">Stronger Evidence • Better Tomorrow</p>
           </div>
         </div>
       </div>
 
-      {/* Compliance Footer */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 text-xs">
-        <span className="text-slate-400 font-medium">Compliance Standards:</span>
-        <div className="flex flex-wrap gap-2">
-          <span className="px-3 py-1 bg-slate-800 rounded-lg border border-slate-700 text-emerald-400 font-semibold">CTRI Registered (12/12)</span>
-          <span className="px-3 py-1 bg-slate-800 rounded-lg border border-slate-700 text-emerald-400 font-semibold">GCP-ASU Compliant</span>
-          <span className="px-3 py-1 bg-slate-800 rounded-lg border border-slate-700 text-cyan-400 font-semibold">HL7 FHIR R4 Ready</span>
-          <span className="px-3 py-1 bg-slate-800 rounded-lg border border-slate-700 text-purple-400 font-semibold">CDISC SDTM / ODM</span>
+      {/* 3. Bottom Compliance Badges Footer */}
+      <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3 flex items-center justify-between text-[11px] text-slate-300">
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-white">Regulatory & Compliance:</span>
+          <span className="px-2.5 py-1 bg-slate-800/80 rounded border border-slate-700">CTRI: <strong className="text-emerald-400">12/12 Compliant</strong></span>
+          <span className="px-2.5 py-1 bg-slate-800/80 rounded border border-slate-700">GCP-ASU: <strong className="text-emerald-400">Compliant</strong></span>
+          <span className="px-2.5 py-1 bg-slate-800/80 rounded border border-slate-700">NDCT Rules 2019: <strong className="text-emerald-400">Compliant</strong></span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-white">Data Standards & Security:</span>
+          <span className="px-2.5 py-1 bg-slate-800/80 rounded border border-slate-700">CDISC: <strong className="text-cyan-400">SDTM / ODM</strong></span>
+          <span className="px-2.5 py-1 bg-slate-800/80 rounded border border-slate-700">HL7 FHIR R4: <strong className="text-cyan-400">Interoperable</strong></span>
+          <span className="px-2.5 py-1 bg-slate-800/80 rounded border border-slate-700">ISO/IEC 27001: <strong className="text-emerald-400">Certified</strong></span>
         </div>
       </div>
+
+      {/* Modals connected to database */}
+      <CreateStudyModal
+        isOpen={isCreateStudyOpen}
+        onClose={() => setIsCreateStudyOpen(false)}
+        onSuccess={refreshData}
+      />
+
+      <AddPatientModal
+        isOpen={isAddPatientOpen}
+        studies={(data?.studies || []).map((s: any) => ({ studyCode: s.studyId, title: s.title }))}
+        onClose={() => setIsAddPatientOpen(false)}
+        onSuccess={refreshData}
+      />
+
+      <ReportSafetyModal
+        isOpen={isReportSafetyOpen}
+        studies={(data?.studies || []).map((s: any) => ({ studyCode: s.studyId, title: s.title }))}
+        onClose={() => setIsReportSafetyOpen(false)}
+        onSuccess={refreshData}
+      />
     </div>
   );
 }
 
-const defaultStudies = [
-  { id: '1', studyCode: 'AIIA-CT-001', title: 'Diabetes Care Study', phase: 'PHASE_III', sitesCount: 5, enrolledCount: 312, targetPatients: 400, status: 'ONGOING' },
-  { id: '2', studyCode: 'AIIA-CT-002', title: 'Oncology Biomarker Study', phase: 'PHASE_II', sitesCount: 4, enrolledCount: 248, targetPatients: 300, status: 'ONGOING' },
-  { id: '3', studyCode: 'AIIA-CT-003', title: 'Cardiovascular Risk Study', phase: 'PHASE_II', sitesCount: 6, enrolledCount: 196, targetPatients: 250, status: 'ON_HOLD' },
-];
+function MetricCard({ title, value, sub, color }: any) {
+  return (
+    <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3 flex flex-col justify-between shadow-sm">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-slate-400 leading-tight">{title}</span>
+        <span className={`w-2 h-2 rounded-full ${color}`}></span>
+      </div>
+      <div className="my-1">
+        <span className="text-xl font-bold text-white tracking-tight">{value}</span>
+      </div>
+      <span className="text-[9px] text-slate-400 truncate">{sub}</span>
+    </div>
+  );
+}
+
+function ActionButton({ title, icon: Icon }: any) {
+  return (
+    <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium bg-[#12263f] hover:bg-[#183457] text-slate-200 transition">
+      <div className="flex items-center gap-2">
+        <Icon className="w-3.5 h-3.5 text-slate-400" />
+        <span>{title}</span>
+      </div>
+      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+    </button>
+  );
+}
+
+function DeadlineItem({ title, study, date, alert }: any) {
+  return (
+    <div className="flex justify-between items-center border-b border-slate-800/60 pb-1.5">
+      <div>
+        <p className={`font-medium ${alert ? 'text-rose-400' : 'text-slate-200'}`}>{title}</p>
+        <p className="text-[10px] text-slate-400">{study}</p>
+      </div>
+      <span className="text-[10px] text-slate-400">{date}</span>
+    </div>
+  );
+}
