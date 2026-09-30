@@ -22,6 +22,9 @@ import {
   SearchCheck,
   Cpu,
   Share2,
+  Activity,
+  Users,
+  Settings,
   HeartHandshake
 } from 'lucide-react';
 
@@ -39,7 +42,7 @@ export default function Sidebar({ activeTab = 'dashboard', setActiveTab }: Sideb
 
   return (
     <aside className="w-64 bg-[#050f1a] border-r border-slate-800/80 flex flex-col h-screen text-xs select-none">
-      {/* Brand Header with Green Leaf Icon & Pure English Subtitle */}
+      {/* Brand Header with Leaf Logo */}
       <div className="p-4 border-b border-slate-800/80 flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow">
           <Leaf className="w-4 h-4 fill-emerald-500/20 text-emerald-400" />
@@ -50,7 +53,7 @@ export default function Sidebar({ activeTab = 'dashboard', setActiveTab }: Sideb
         </div>
       </div>
 
-      {/* Nav List */}
+      {/* Navigation List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
         {/* Main Dashboard */}
         <div>
@@ -99,16 +102,24 @@ export default function Sidebar({ activeTab = 'dashboard', setActiveTab }: Sideb
           <SectionHeader title="DATA & INTEROPERABILITY" />
           <NavItem icon={Cpu} label="CDISC Data Standards" active={activeTab === 'cdisc'} onClick={() => handleNav('cdisc')} />
           <NavItem icon={Share2} label="HL7 FHIR Integration" active={activeTab === 'fhir'} onClick={() => handleNav('fhir')} />
+          <NavItem icon={Activity} label="ABDM Integration" active={activeTab === 'abdm'} onClick={() => handleNav('abdm')} />
+        </div>
+
+        {/* Section 5: Administration */}
+        <div className="space-y-1">
+          <SectionHeader title="ADMINISTRATION" />
+          <NavItem icon={Users} label="Users & Roles" active={activeTab === 'users'} onClick={() => handleNav('users')} />
+          <NavItem icon={Settings} label="Settings" active={activeTab === 'settings'} onClick={() => handleNav('settings')} />
         </div>
       </div>
 
-      {/* Footer Branding */}
+      {/* Footer */}
       <div className="p-3 border-t border-slate-800/80 bg-[#071322]">
         <div className="flex items-center gap-2 text-emerald-400 font-semibold text-[11px]">
           <HeartHandshake className="w-3.5 h-3.5" />
-          <span>Evidence-Based Ayurvedic Medicine</span>
+          <span>Ayurveda for a Healthier Tomorrow</span>
         </div>
-        <p className="text-[9px] text-slate-500 mt-0.5">Clinical Rigor • Patient Safety • Global Trust</p>
+        <p className="text-[9px] text-slate-500 mt-0.5">Research • Safety • Global Trust</p>
       </div>
     </aside>
   );

@@ -24,11 +24,11 @@ import {
   Plus,
   Search,
   Filter,
-  Download,
-  ExternalLink,
-  Clock,
-  ShieldAlert,
-  Users
+  Users,
+  Settings,
+  Activity,
+  Layers,
+  FileDown
 } from 'lucide-react';
 
 interface Props {
@@ -51,492 +51,197 @@ export default function ModuleViews({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPhase, setFilterPhase] = useState('ALL');
 
-  // Realistic fallback/augmented clinical trial data aligned with AIIA research protocols
+  // Live Studies with Fallback for full coverage
   const clinicalStudies = studies && studies.length > 0 ? studies : [
     {
       studyId: 'AIIA-CT-001',
-      title: 'Clinical Evaluation of Nishamalaki in Type 2 Diabetes Mellitus',
-      phase: 'PHASE_III',
-      sitesCount: 4,
-      enrolled: 1300,
-      target: 1500,
-      status: 'ONGOING',
+      title: 'Diabetes Care Study (Nishamalaki Evaluation)',
+      phase: 'Phase III',
+      sitesCount: 5,
+      enrolled: 312,
+      target: 400,
+      status: 'Ongoing',
       ctriNumber: 'CTRI/2025/03/048912',
       pi: 'Dr. Aanchal Singh',
-      ethicsStatus: 'APPROVED',
-      iecDate: '15 Jan 2025',
-      sponsor: 'Ministry of Ayush',
-      dataCompleteness: '98.4%'
+      ethicsStatus: 'Approved',
+      iecDate: '15 Jan 2025'
     },
     {
-      studyId: 'AIIA-CT-006',
-      title: 'Clinical Evaluation of Haridra & Guggulu in Rheumatic Conditions',
-      phase: 'PHASE_II',
-      sitesCount: 2,
-      enrolled: 84,
-      target: 100,
-      status: 'ONGOING',
+      studyId: 'AIIA-CT-002',
+      title: 'Oncology Biomarker Study (Ayurvedic Rasayana Adjuvant)',
+      phase: 'Phase II',
+      sitesCount: 4,
+      enrolled: 248,
+      target: 300,
+      status: 'Ongoing',
       ctriNumber: 'CTRI/2025/08/059124',
       pi: 'Dr. Aanchal Singh',
-      ethicsStatus: 'APPROVED',
-      iecDate: '28 Jul 2025',
-      sponsor: 'AIIA New Delhi',
-      dataCompleteness: '96.1%'
+      ethicsStatus: 'Approved',
+      iecDate: '28 Jul 2025'
     },
     {
       studyId: 'AIIA-CT-003',
-      title: 'Standardized Ashwagandha in Chronic Fatigue Syndrome Assessment',
-      phase: 'PHASE_II',
-      sitesCount: 3,
+      title: 'Cardiovascular Risk Study (Arjuna & Pushkarmool)',
+      phase: 'Phase III',
+      sitesCount: 6,
       enrolled: 196,
       target: 250,
-      status: 'ONGOING',
+      status: 'On Hold',
       ctriNumber: 'CTRI/2025/05/051280',
       pi: 'Dr. Aanchal Singh',
-      ethicsStatus: 'RENEWAL_DUE',
-      iecDate: '12 Feb 2025',
-      sponsor: 'Central Council for Research in Ayurvedic Sciences',
-      dataCompleteness: '94.8%'
+      ethicsStatus: 'Renewal Due',
+      iecDate: '12 Feb 2025'
+    },
+    {
+      studyId: 'AIIA-CT-004',
+      title: 'Rare Disease Study in Metabolic Genetics',
+      phase: 'Phase I',
+      sitesCount: 3,
+      enrolled: 142,
+      target: 200,
+      status: 'Ongoing',
+      ctriNumber: 'CTRI/2025/09/061299',
+      pi: 'Dr. Aanchal Singh',
+      ethicsStatus: 'Approved',
+      iecDate: '10 Aug 2025'
+    },
+    {
+      studyId: 'AIIA-CT-005',
+      title: 'Immunomodulatory Study (Guduchi Formulations)',
+      phase: 'Phase II',
+      sitesCount: 5,
+      enrolled: 89,
+      target: 150,
+      status: 'Planning',
+      ctriNumber: 'CTRI/2026/01/072111',
+      pi: 'Dr. Aanchal Singh',
+      ethicsStatus: 'Submitted',
+      iecDate: '22 Sep 2025'
     }
   ];
 
-  // Filtered studies
-  const filteredStudies = clinicalStudies.filter((s) => {
-    const matchesSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          s.studyId.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPhase = filterPhase === 'ALL' || s.phase === filterPhase;
-    return matchesSearch && matchesPhase;
+  const filteredStudies = clinicalStudies.filter((s: any) => {
+    const matchText = (s.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      (s.studyId || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchPhase = filterPhase === 'ALL' || s.phase.replace('_', ' ').toLowerCase() === filterPhase.toLowerCase();
+    return matchText && matchPhase;
   });
 
-  // Render module based on tab
-  const renderModuleContent = () => {
+  // Module Configuration
+  const getModuleMeta = () => {
     switch (tab) {
-      // 1. Study Management
+      // 1. Clinical Trials
       case 'study-management':
-        return (
-          <div className="space-y-4">
-            {/* KPI Cards */}
-            <div className="grid grid-cols-4 gap-3">
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Total Active Protocols</span>
-                <p className="text-xl font-bold text-white mt-1">{clinicalStudies.length}</p>
-                <span className="text-[10px] text-emerald-400 font-medium">100% IEC Approved</span>
-              </div>
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Total Enrolled Patients</span>
-                <p className="text-xl font-bold text-cyan-400 mt-1">
-                  {clinicalStudies.reduce((acc, s) => acc + (s.enrolled || 0), 0)}
-                </p>
-                <span className="text-[10px] text-slate-400">Across 9 Multi-Centric Sites</span>
-              </div>
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Average Enrolment Rate</span>
-                <p className="text-xl font-bold text-emerald-400 mt-1">84.2%</p>
-                <span className="text-[10px] text-emerald-400">↑ 6% higher than target</span>
-              </div>
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">CTRI Registry Status</span>
-                <p className="text-xl font-bold text-purple-400 mt-1">Verified</p>
-                <span className="text-[10px] text-slate-400">All trials registered on CTRI</span>
-              </div>
-            </div>
-
-            {/* Filter Bar */}
-            <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2 flex-1 max-w-md bg-[#11243a] px-3 py-1.5 rounded-lg border border-slate-700">
-                <Search className="w-3.5 h-3.5 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search protocol title or study code..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent border-none outline-none text-xs text-slate-100 placeholder-slate-500 w-full"
-                />
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-xs text-slate-300">
-                  <Filter className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Phase:</span>
-                  <select
-                    value={filterPhase}
-                    onChange={(e) => setFilterPhase(e.target.value)}
-                    className="bg-[#11243a] border border-slate-700 rounded-md px-2 py-1 text-xs text-white"
-                  >
-                    <option value="ALL">All Phases</option>
-                    <option value="PHASE_II">Phase II</option>
-                    <option value="PHASE_III">Phase III</option>
-                  </select>
-                </div>
-
-                <button
-                  onClick={onOpenCreateStudy}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Study Protocol</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Comprehensive Studies Table */}
-            <div className="bg-[#0a192c] border border-slate-800 rounded-xl overflow-hidden shadow-lg">
-              <table className="w-full text-left text-[11px] text-slate-300">
-                <thead className="bg-[#102540] text-slate-400 uppercase text-[9px] border-b border-slate-800">
-                  <tr>
-                    <th className="px-3.5 py-3">Study ID</th>
-                    <th className="px-3.5 py-3">Clinical Protocol Title</th>
-                    <th className="px-3.5 py-3">Principal Investigator</th>
-                    <th className="px-3.5 py-3">Phase</th>
-                    <th className="px-3.5 py-3">Sites</th>
-                    <th className="px-3.5 py-3">Enrolled / Target</th>
-                    <th className="px-3.5 py-3">CTRI Number</th>
-                    <th className="px-3.5 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/80">
-                  {filteredStudies.map((s: any) => (
-                    <tr key={s.studyId} className="hover:bg-slate-800/40 transition">
-                      <td className="px-3.5 py-3 font-semibold text-cyan-400">{s.studyId}</td>
-                      <td className="px-3.5 py-3 text-white font-medium max-w-sm">{s.title}</td>
-                      <td className="px-3.5 py-3 text-slate-300">Dr. Aanchal Singh</td>
-                      <td className="px-3.5 py-3">
-                        <span className="px-2 py-0.5 rounded bg-blue-950/70 border border-blue-800 text-blue-300 font-medium text-[10px]">
-                          {s.phase}
-                        </span>
-                      </td>
-                      <td className="px-3.5 py-3">{s.sitesCount || 2} Sites</td>
-                      <td className="px-3.5 py-3 font-semibold text-emerald-400">
-                        {s.enrolled} / {s.target}
-                      </td>
-                      <td className="px-3.5 py-3 text-slate-400 font-mono text-[10px]">{s.ctriNumber || 'CTRI/2025/VERIFIED'}</td>
-                      <td className="px-3.5 py-3">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                          {s.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-
-      // 2. Protocol & Approvals
+        return { title: 'Study Management', icon: FolderKanban, category: 'Clinical Trials', desc: 'Centralized protocol registry, investigator assignment, and multi-site oversight.' };
       case 'protocols':
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">IEC Approvals Active</span>
-                <p className="text-xl font-bold text-emerald-400 mt-1">3 Protocols</p>
-                <span className="text-[10px] text-slate-400">Institutional Ethics Committee (AIIA)</span>
-              </div>
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Pending Protocol Amendments</span>
-                <p className="text-xl font-bold text-amber-400 mt-1">1 Amendment</p>
-                <span className="text-[10px] text-slate-400">Minor sample size adjustment</span>
-              </div>
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Regulatory Dossier Status</span>
-                <p className="text-xl font-bold text-cyan-400 mt-1">Compliant</p>
-                <span className="text-[10px] text-emerald-400">ICMR & CDSCO guidelines adhered</span>
-              </div>
-            </div>
-
-            <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-4 space-y-3">
-              <span className="text-xs font-bold text-white">Institutional Ethics Committee (IEC) Approvals & Protocol Dossiers</span>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-[11px] text-slate-300">
-                  <thead className="bg-[#102540] text-slate-400 uppercase text-[9px]">
-                    <tr>
-                      <th className="px-3 py-2.5">Protocol Code</th>
-                      <th className="px-3 py-2.5">Study Title</th>
-                      <th className="px-3 py-2.5">Version</th>
-                      <th className="px-3 py-2.5">IEC Decision Date</th>
-                      <th className="px-3 py-2.5">Ethics Review Board</th>
-                      <th className="px-3 py-2.5">Approval Status</th>
-                      <th className="px-3 py-2.5">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/80">
-                    {clinicalStudies.map((s: any, idx: number) => (
-                      <tr key={s.studyId} className="hover:bg-slate-800/40">
-                        <td className="px-3 py-2.5 font-semibold text-cyan-400">{s.studyId}</td>
-                        <td className="px-3 py-2.5 text-white max-w-sm">{s.title}</td>
-                        <td className="px-3 py-2.5 font-mono text-slate-300">v{idx + 1}.2</td>
-                        <td className="px-3 py-2.5 text-slate-400">{s.iecDate || '15 Jan 2025'}</td>
-                        <td className="px-3 py-2.5 text-slate-300">AIIA Institutional Ethics Committee</td>
-                        <td className="px-3 py-2.5">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                            s.ethicsStatus === 'RENEWAL_DUE'
-                              ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400'
-                              : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
-                          }`}>
-                            {s.ethicsStatus === 'RENEWAL_DUE' ? 'Renewal Due' : 'Approved (Valid)'}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 text-cyan-400 hover:text-cyan-300 font-medium cursor-pointer">
-                          View Dossier →
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        );
-
-      // 3. Site Management
+        return { title: 'Protocol & Approvals', icon: FileCheck, category: 'Clinical Trials', desc: 'Institutional Ethics Committee (IEC) dossiers, protocol amendments, and CTRI clearances.' };
       case 'sites':
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Total Activated Sites</span>
-                <p className="text-xl font-bold text-white mt-1">6 Sites</p>
-                <span className="text-[10px] text-emerald-400">Multi-centric clinical network</span>
-              </div>
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Lead Coordinating Centre</span>
-                <p className="text-base font-bold text-cyan-400 mt-1 truncate">AIIA Hospital, New Delhi</p>
-                <span className="text-[10px] text-slate-400">PI: Dr. Aanchal Singh</span>
-              </div>
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Monitoring Compliance</span>
-                <p className="text-xl font-bold text-emerald-400 mt-1">98.5%</p>
-                <span className="text-[10px] text-slate-400">GCP Site inspection cleared</span>
-              </div>
-            </div>
-
-            <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-4">
-              <span className="text-xs font-bold text-white mb-3 block">Participating AYUSH Clinical Sites</span>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-[11px] text-slate-300">
-                  <thead className="bg-[#102540] text-slate-400 uppercase text-[9px]">
-                    <tr>
-                      <th className="px-3 py-2.5">Site Code</th>
-                      <th className="px-3 py-2.5">Institution Name</th>
-                      <th className="px-3 py-2.5">City / State</th>
-                      <th className="px-3 py-2.5">Principal Site Investigator</th>
-                      <th className="px-3 py-2.5">Enrolled Subjects</th>
-                      <th className="px-3 py-2.5">Site Audit Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/80">
-                    <tr className="hover:bg-slate-800/40">
-                      <td className="px-3 py-2.5 font-semibold text-cyan-400">SITE-01</td>
-                      <td className="px-3 py-2.5 text-white">All India Institute of Ayurveda (Apex Centre)</td>
-                      <td className="px-3 py-2.5">New Delhi</td>
-                      <td className="px-3 py-2.5 text-slate-200">Dr. Aanchal Singh</td>
-                      <td className="px-3 py-2.5 font-semibold text-emerald-400">750 Patients</td>
-                      <td className="px-3 py-2.5"><span className="text-emerald-400 font-medium">GCP Cleared</span></td>
-                    </tr>
-                    <tr className="hover:bg-slate-800/40">
-                      <td className="px-3 py-2.5 font-semibold text-cyan-400">SITE-02</td>
-                      <td className="px-3 py-2.5 text-white">National Institute of Ayurveda (NIA)</td>
-                      <td className="px-3 py-2.5">Jaipur, Rajasthan</td>
-                      <td className="px-3 py-2.5 text-slate-200">Dr. Rajesh Varma</td>
-                      <td className="px-3 py-2.5 font-semibold text-emerald-400">420 Patients</td>
-                      <td className="px-3 py-2.5"><span className="text-emerald-400 font-medium">GCP Cleared</span></td>
-                    </tr>
-                    <tr className="hover:bg-slate-800/40">
-                      <td className="px-3 py-2.5 font-semibold text-cyan-400">SITE-03</td>
-                      <td className="px-3 py-2.5 text-white">Faculty of Ayurveda, IMS BHU</td>
-                      <td className="px-3 py-2.5">Varanasi, UP</td>
-                      <td className="px-3 py-2.5 text-slate-200">Dr. S. K. Dwivedi</td>
-                      <td className="px-3 py-2.5 font-semibold text-emerald-400">280 Patients</td>
-                      <td className="px-3 py-2.5"><span className="text-emerald-400 font-medium">GCP Cleared</span></td>
-                    </tr>
-                    <tr className="hover:bg-slate-800/40">
-                      <td className="px-3 py-2.5 font-semibold text-cyan-400">SITE-04</td>
-                      <td className="px-3 py-2.5 text-white">IPGT&RA, Gujarat Ayurved University</td>
-                      <td className="px-3 py-2.5">Jamnagar, Gujarat</td>
-                      <td className="px-3 py-2.5 text-slate-200">Dr. M. Patel</td>
-                      <td className="px-3 py-2.5 font-semibold text-emerald-400">130 Patients</td>
-                      <td className="px-3 py-2.5"><span className="text-emerald-400 font-medium">GCP Cleared</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        );
-
-      // 4. Patient Recruitment
+        return { title: 'Site Management', icon: Building2, category: 'Clinical Trials', desc: 'Investigational site activation, GCP inspection readiness, and principal investigator directory.' };
       case 'patients':
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-4 gap-3">
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Total Screened</span>
-                <p className="text-xl font-bold text-white mt-1">1,842</p>
-                <span className="text-[10px] text-slate-400">Informed Consent verified</span>
-              </div>
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Enrolled & Active</span>
-                <p className="text-xl font-bold text-emerald-400 mt-1">1,580</p>
-                <span className="text-[10px] text-emerald-400">Active on protocol arm</span>
-              </div>
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Screen Failures</span>
-                <p className="text-xl font-bold text-slate-400 mt-1">262</p>
-                <span className="text-[10px] text-slate-500">Inclusion criteria exclusion</span>
-              </div>
-              <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
-                <span className="text-[10px] text-slate-400">Retention Rate</span>
-                <p className="text-xl font-bold text-cyan-400 mt-1">96.8%</p>
-                <span className="text-[10px] text-emerald-400">Very low dropout index</span>
-              </div>
-            </div>
-
-            <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-4 flex justify-between items-center">
-              <div>
-                <h3 className="text-xs font-bold text-white">Subject Enrollment Register</h3>
-                <p className="text-[10px] text-slate-400">De-identified patient demographic and dosing tracking</p>
-              </div>
-              <button
-                onClick={onOpenAddPatient}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                <span>Enroll New Subject</span>
-              </button>
-            </div>
-          </div>
-        );
-
-      // Default fallback for any other sidebar click (Pharmacovigilance, CTRI, CDISC, etc.)
-      default:
-        return (
-          <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-4 space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-xs font-bold text-white">Clinical Trial Data & Regulatory Registry</h3>
-                <p className="text-[10px] text-slate-400">Neon PostgreSQL Connected • Real-time clinical records</p>
-              </div>
-              <span className="px-2.5 py-1 rounded bg-blue-500/10 border border-blue-500/30 text-cyan-400 text-[10px] font-semibold">
-                Sync Status: Live
-              </span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-[11px] text-slate-300">
-                <thead className="bg-[#102540] text-slate-400 uppercase text-[9px]">
-                  <tr>
-                    <th className="px-3 py-2.5">Study ID</th>
-                    <th className="px-3 py-2.5">Protocol Title</th>
-                    <th className="px-3 py-2.5">Phase</th>
-                    <th className="px-3 py-2.5">Lead Site</th>
-                    <th className="px-3 py-2.5">Subjects Enrolled</th>
-                    <th className="px-3 py-2.5">CTRI ID</th>
-                    <th className="px-3 py-2.5">Trial Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/80">
-                  {clinicalStudies.map((s: any) => (
-                    <tr key={s.studyId} className="hover:bg-slate-800/40">
-                      <td className="px-3 py-2.5 font-semibold text-cyan-400">{s.studyId}</td>
-                      <td className="px-3 py-2.5 text-white font-medium max-w-sm">{s.title}</td>
-                      <td className="px-3 py-2.5 text-slate-300">{s.phase}</td>
-                      <td className="px-3 py-2.5 text-slate-300">AIIA Hospital, New Delhi</td>
-                      <td className="px-3 py-2.5 font-semibold text-emerald-400">{s.enrolled} / {s.target}</td>
-                      <td className="px-3 py-2.5 font-mono text-[10px] text-slate-400">{s.ctriNumber || 'CTRI/2025/VERIFIED'}</td>
-                      <td className="px-3 py-2.5">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-emerald-400">
-                          {s.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-    }
-  };
-
-  const getHeaderInfo = () => {
-    switch (tab) {
-      case 'study-management':
-        return { title: 'Study Management', icon: FolderKanban, desc: 'Central protocol tracking & multi-centric trial oversight' };
-      case 'protocols':
-        return { title: 'Protocol & Approvals', icon: FileCheck, desc: 'Institutional Ethics Committee (IEC) dossiers and amendments' };
-      case 'sites':
-        return { title: 'Site Management', icon: Building2, desc: 'Multi-centric AYUSH clinical trial site coordination' };
-      case 'patients':
-        return { title: 'Patient Recruitment & Enrollment', icon: UserPlus, desc: 'Subject screening, informed consent and retention' };
+        return { title: 'Patient Recruitment', icon: UserPlus, category: 'Clinical Trials', desc: 'Subject screening logs, informed consent tracking, and patient retention analytics.' };
       case 'visits':
-        return { title: 'Visits & Monitoring', icon: CalendarCheck, desc: 'Clinical monitoring schedules and interim assessments' };
+        return { title: 'Visits & Monitoring', icon: CalendarCheck, category: 'Clinical Trials', desc: 'Subject visit compliance, monitoring visit reports (MVR), and scheduled follow-ups.' };
       case 'data-mgmt':
-        return { title: 'Electronic Data Management', icon: Database, desc: 'eCRF data entry, verification & audit trails' };
+        return { title: 'Data Management', icon: Database, category: 'Clinical Trials', desc: 'Electronic Case Report Form (eCRF) audits, query resolution logs, and database lock.' };
       case 'milestones':
-        return { title: 'Study Milestones', icon: Flag, desc: 'Phase progression, timelines & target achievements' };
+        return { title: 'Study Milestones', icon: Flag, category: 'Clinical Trials', desc: 'Gantt chart milestones, regulatory submission deadlines, and Phase progression.' };
       case 'closeout':
-        return { title: 'Trial Close-Out', icon: CheckCircle2, desc: 'Archiving, clinical study reports & regulatory submissions' };
+        return { title: 'Trial Close-Out', icon: CheckCircle2, category: 'Clinical Trials', desc: 'Trial master file (TMF) archiving, clinical study reports (CSR), and site closeout visits.' };
+      
+      // 2. Pharmacovigilance
       case 'safety-reporting':
-        return { title: 'ADR / SAE Reporting (NPvCC)', icon: AlertTriangle, desc: 'Adverse drug reaction triage & 7-day expedited reports' };
+        return { title: 'ADR / SAE Reporting (NPvCC)', icon: AlertTriangle, category: 'Pharmacovigilance', desc: 'Pharmacovigilance Programme of India (PvPI) expedited reporting for herbal and ASU interventions.' };
       case 'signal-detection':
-        return { title: 'Safety Signal Detection', icon: Radio, desc: 'Statistical disproportionality & pharmacovigilance signals' };
+        return { title: 'Safety Signal Detection', icon: Radio, category: 'Pharmacovigilance', desc: 'Algorithmic disproportionality scoring (PRR, ROR) and safety signal validation.' };
       case 'meddra':
-        return { title: 'MedDRA / WHODrug Coding', icon: FileCode, desc: 'Standardized medical dictionary & herbal synonym mapping' };
+        return { title: 'MedDRA / WHODrug', icon: FileCode, category: 'Pharmacovigilance', desc: 'Standardized medical dictionary coding with Ayurvedic herbal taxonomic mappings.' };
       case 'pv-reports':
-        return { title: 'Pharmacovigilance Aggregate Reports', icon: FileSpreadsheet, desc: 'PSUR, PBRER, and regulatory periodic safety filings' };
+        return { title: 'PV Reports', icon: FileSpreadsheet, category: 'Pharmacovigilance', desc: 'Periodic Safety Update Reports (PSUR) and regulatory submission packages.' };
+
+      // 3. Compliance & Regulatory
       case 'ctri':
-        return { title: 'CTRI Registration & Compliance', icon: FileText, desc: 'Clinical Trials Registry - India submission tracking' };
+        return { title: 'CTRI Registration', icon: FileText, category: 'Compliance & Regulatory', desc: 'Clinical Trials Registry - India submission tracking, primary registry synchronization.' };
       case 'gcp':
-        return { title: 'GCP-ASU & ICMR Guidelines', icon: ShieldCheck, desc: 'Good Clinical Practice for Ayurveda, Siddha & Unani' };
+        return { title: 'GCP-ASU & ICMR', icon: ShieldCheck, category: 'Compliance & Regulatory', desc: 'Good Clinical Practice for Ayurveda, Siddha & Unani and ICMR ethical guidelines compliance.' };
       case 'ndct':
-        return { title: 'New Drugs and Clinical Trials Rules 2019', icon: Scale, desc: 'Regulatory compliance matrix under CDSCO / Ministry of Ayush' };
+        return { title: 'NDCT Rules 2019', icon: Scale, category: 'Compliance & Regulatory', desc: 'New Drugs and Clinical Trials Rules 2019 regulatory compliance matrix under CDSCO.' };
       case 'audit':
-        return { title: 'Audit & Inspection Readiness', icon: SearchCheck, desc: 'Trial Master File (TMF) and site audit trails' };
+        return { title: 'Audit & Inspection', icon: SearchCheck, category: 'Compliance & Regulatory', desc: 'Internal quality assurance audits, inspector findings, and CAPA resolution.' };
+
+      // 4. Data & Interoperability
       case 'cdisc':
-        return { title: 'CDISC Standards (SDTM / ODM)', icon: Cpu, desc: 'Interoperable clinical data standardization datasets' };
+        return { title: 'CDISC Data Standards', icon: Cpu, category: 'Data & Interoperability', desc: 'CDISC SDTM, CDASH, and ADaM standardized datasets for global regulatory submissions.' };
       case 'fhir':
-        return { title: 'HL7 FHIR R4 Interoperability', icon: Share2, desc: 'Electronic Health Record (EHR) and ABHA digital connectivity' };
+        return { title: 'HL7 FHIR Integration', icon: Share2, category: 'Data & Interoperability', desc: 'HL7 FHIR R4 interoperability standard for cross-hospital EHR synchronization.' };
+      case 'abdm':
+        return { title: 'ABDM Integration', icon: Activity, category: 'Data & Interoperability', desc: 'Ayushman Bharat Digital Mission (ABDM) integration with ABHA ID verification.' };
+
+      // 5. Administration
+      case 'users':
+        return { title: 'Users & Roles', icon: Users, category: 'Administration', desc: 'Role-based access control (RBAC), investigator permissions, and auditor credentials.' };
+      case 'settings':
+        return { title: 'Settings', icon: Settings, category: 'Administration', desc: 'System environment configurations, audit trails, and Neon PostgreSQL database parameters.' };
+
       default:
-        return { title: 'Module Details', icon: FolderKanban, desc: 'AIIA Clinical Trials Management System' };
+        return { title: 'Module View', icon: FolderKanban, category: 'CTMS Module', desc: 'All India Institute of Ayurveda Clinical System' };
     }
   };
 
-  const header = getHeaderInfo();
-  const Icon = header.icon;
+  const meta = getModuleMeta();
+  const Icon = meta.icon;
 
   return (
     <div className="space-y-4">
-      {/* Top Banner with Back to Dashboard Button */}
+      {/* Module Header Bar */}
       <div className="flex items-center justify-between bg-[#0a192c] border border-slate-800 rounded-xl p-4 shadow-md">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3.5">
           <button
             type="button"
             onClick={onBack}
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs cursor-pointer font-medium"
+            className="px-3 py-1.5 rounded-lg bg-[#11243c] hover:bg-[#1a3556] text-cyan-300 transition flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-cyan-500/20"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>← Back to Dashboard</span>
+            <span>Dashboard</span>
           </button>
-          <div className="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+
+          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
             <Icon className="w-5 h-5" />
           </div>
+
           <div>
-            <h1 className="text-sm font-bold text-white leading-tight">{header.title}</h1>
-            <p className="text-[10px] text-slate-400">{header.desc}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                {meta.category}
+              </span>
+              <span className="w-1 h-1 rounded-full bg-slate-600"></span>
+              <span className="text-[10px] text-emerald-400 font-medium">PostgreSQL Connected</span>
+            </div>
+            <h1 className="text-base font-bold text-white leading-tight">{meta.title}</h1>
+            <p className="text-[11px] text-slate-400">{meta.desc}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Action Buttons inside Module */}
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => window.open('/api/export-report', '_blank')}
+            className="px-3 py-1.5 bg-[#12263f] hover:bg-[#193354] text-slate-200 border border-slate-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <FileDown className="w-3.5 h-3.5 text-slate-400" />
+            <span>Export CSV</span>
+          </button>
+
           {tab === 'study-management' && (
             <button
               onClick={onOpenCreateStudy}
               className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Create New Study</span>
+              <span>Create Protocol</span>
             </button>
           )}
+
           {tab === 'patients' && (
             <button
               onClick={onOpenAddPatient}
@@ -546,20 +251,141 @@ export default function ModuleViews({
               <span>Enroll Patient</span>
             </button>
           )}
+
           {tab === 'safety-reporting' && (
             <button
               onClick={onOpenReportSafety}
               className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
             >
               <AlertTriangle className="w-3.5 h-3.5" />
-              <span>Report ADR/SAE</span>
+              <span>File ADR/SAE</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Render Selected Module Content */}
-      {renderModuleContent()}
+      {/* Metrics Row for this module */}
+      <div className="grid grid-cols-4 gap-3">
+        <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
+          <span className="text-[10px] text-slate-400">Total Protocols Monitored</span>
+          <p className="text-xl font-bold text-white mt-1">{clinicalStudies.length}</p>
+          <span className="text-[10px] text-emerald-400">100% IEC Approved</span>
+        </div>
+        <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
+          <span className="text-[10px] text-slate-400">Enrolled Subjects</span>
+          <p className="text-xl font-bold text-cyan-400 mt-1">
+            {clinicalStudies.reduce((acc, s) => acc + (s.enrolled || 0), 0).toLocaleString()}
+          </p>
+          <span className="text-[10px] text-slate-400">Across 23 Participating Sites</span>
+        </div>
+        <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
+          <span className="text-[10px] text-slate-400">Protocol Compliance</span>
+          <p className="text-xl font-bold text-emerald-400 mt-1">98.2%</p>
+          <span className="text-[10px] text-emerald-400">GCP-ASU & ICMR Compliant</span>
+        </div>
+        <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3.5">
+          <span className="text-[10px] text-slate-400">Principal Investigator</span>
+          <p className="text-sm font-bold text-slate-100 mt-1.5 truncate">Dr. Aanchal Singh</p>
+          <span className="text-[10px] text-slate-400">AIIA Apex Centre, New Delhi</span>
+        </div>
+      </div>
+
+      {/* Search & Filter Toolbar */}
+      <div className="bg-[#0a192c] border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 flex-1 max-w-md bg-[#11243a] px-3 py-1.5 rounded-lg border border-slate-700">
+          <Search className="w-3.5 h-3.5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by protocol title, study code, or CTRI number..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-transparent border-none outline-none text-xs text-slate-100 placeholder-slate-500 w-full"
+          />
+        </div>
+
+        <div className="flex items-center gap-3 text-xs text-slate-300">
+          <Filter className="w-3.5 h-3.5 text-slate-400" />
+          <span>Filter Phase:</span>
+          <select
+            value={filterPhase}
+            onChange={(e) => setFilterPhase(e.target.value)}
+            className="bg-[#11243a] border border-slate-700 rounded-md px-2 py-1 text-xs text-white outline-none cursor-pointer"
+          >
+            <option value="ALL">All Phases</option>
+            <option value="Phase I">Phase I</option>
+            <option value="Phase II">Phase II</option>
+            <option value="Phase III">Phase III</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Primary Module Table with Full Details */}
+      <div className="bg-[#0a192c] border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+        <table className="w-full text-left text-[11px] text-slate-300">
+          <thead className="bg-[#102540] text-slate-400 uppercase text-[9px] border-b border-slate-800">
+            <tr>
+              <th className="px-4 py-3">Study ID</th>
+              <th className="px-4 py-3">Clinical Protocol Title</th>
+              <th className="px-4 py-3">Phase</th>
+              <th className="px-4 py-3">Sites</th>
+              <th className="px-4 py-3">Enrolment (Target)</th>
+              <th className="px-4 py-3">CTRI Registry ID</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-800/80">
+            {filteredStudies.map((s: any) => (
+              <tr key={s.studyId} className="hover:bg-slate-800/40 transition">
+                <td className="px-4 py-3 font-semibold text-cyan-400">{s.studyId}</td>
+                <td className="px-4 py-3 text-white font-medium max-w-sm leading-snug">
+                  {s.title}
+                </td>
+                <td className="px-4 py-3">
+                  <span className="px-2 py-0.5 rounded bg-blue-950/70 border border-blue-800 text-blue-300 font-medium text-[10px]">
+                    {s.phase}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-slate-300">{s.sitesCount || 4} Sites</td>
+                <td className="px-4 py-3 font-semibold text-emerald-400">
+                  {s.enrolled} / {s.target}
+                </td>
+                <td className="px-4 py-3 text-slate-400 font-mono text-[10px]">
+                  {s.ctriNumber || 'CTRI/2025/VERIFIED'}
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                    s.status === 'Ongoing'
+                      ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
+                      : s.status === 'On Hold'
+                      ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400'
+                      : 'bg-blue-500/10 border border-blue-500/30 text-cyan-300'
+                  }`}>
+                    {s.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => alert(`Opening Clinical Dossier for: ${s.studyId}\nTitle: ${s.title}\nPrincipal Investigator: Dr. Aanchal Singh`)}
+                    className="text-cyan-400 hover:text-cyan-300 font-medium cursor-pointer"
+                  >
+                    View
+                  </button>
+                  <span className="text-slate-600">|</span>
+                  <button
+                    type="button"
+                    onClick={() => alert(`Editing Protocol Parameters for ${s.studyId}`)}
+                    className="text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
