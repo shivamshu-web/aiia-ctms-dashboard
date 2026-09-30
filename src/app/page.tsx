@@ -33,11 +33,22 @@ export default function FullDashboardPage() {
   // Dark Mode State with localStorage memory
   const [darkMode, setDarkMode] = useState(false);
 
+  // Live Clock State
+  const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
+
   useEffect(() => {
     const savedTheme = localStorage.getItem('aiia-theme');
     if (savedTheme === 'dark') {
       setDarkMode(true);
     }
+
+    // Set initial date/time and update every second
+    setCurrentDateTime(new Date());
+    const intervalId = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleToggleDarkMode = (val: boolean | ((prev: boolean) => boolean)) => {
@@ -47,6 +58,25 @@ export default function FullDashboardPage() {
       return nextVal;
     });
   };
+
+  // Live Date & Time Formats
+  const formattedDate = currentDateTime
+    ? currentDateTime.toLocaleDateString('en-GB', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+    : 'Thu, 1 Oct 2026';
+
+  const formattedTime = currentDateTime
+    ? currentDateTime.toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }) + ' IST'
+    : '00:00:00 IST';
 
   // Modal open/close states
   const [isCreateStudyOpen, setIsCreateStudyOpen] = useState(false);
@@ -104,7 +134,7 @@ export default function FullDashboardPage() {
             />
           ) : (
             <>
-              {/* Rich Vibrant Emerald & Forest Gradient Banner */}
+              {/* Rich Vibrant Emerald & Forest Gradient Banner with Live Clock */}
               <div className={`rounded-xl p-4 flex justify-between items-center shadow-md transition-colors duration-200 ${
                 darkMode
                   ? 'bg-gradient-to-r from-[#18181b] via-[#121215] to-[#09090b] border border-zinc-800 text-white'
@@ -125,10 +155,15 @@ export default function FullDashboardPage() {
                   </div>
                 </div>
 
+                {/* Real-time Ticking Live Date & Clock */}
                 <div className="flex items-center gap-6">
                   <div className={`text-right border-r pr-6 ${darkMode ? 'border-zinc-800 text-zinc-300' : 'border-emerald-500/50 text-emerald-100'}`}>
-                    <div className="text-[11px] font-semibold">Wed, 30 Sep 2026</div>
-                    <div className="text-sm font-bold text-white">12:30 IST</div>
+                    <div className="text-[11px] font-semibold tracking-wide">
+                      {formattedDate}
+                    </div>
+                    <div className="text-sm font-bold text-white font-mono tracking-wider">
+                      {formattedTime}
+                    </div>
                   </div>
                   <div className="text-right space-y-0.5">
                     <div className="text-xs font-bold text-amber-300 drop-shadow-xs">Traditional Wisdom</div>
@@ -141,7 +176,7 @@ export default function FullDashboardPage() {
               {/* 12-Col Grid */}
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-9 space-y-4">
-                  {/* Colorful 6 KPI Cards with Top-Border Accents & Subtle Tint */}
+                  {/* Colorful 6 KPI Cards */}
                   <div className="grid grid-cols-6 gap-2.5">
                     <MetricCard
                       title="Total Studies"
@@ -209,7 +244,7 @@ export default function FullDashboardPage() {
 
                   {/* Charts Row */}
                   <div className="grid grid-cols-12 gap-4">
-                    {/* Trend Chart Card with Card Background & Border */}
+                    {/* Trend Chart Card */}
                     <div className={`col-span-7 border rounded-xl p-3.5 shadow-sm transition-colors duration-200 ${
                       darkMode ? 'bg-[#121215] border-zinc-800' : 'bg-white border-slate-200/90'
                     }`}>
