@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Bell, Sun, Moon } from 'lucide-react';
+import { Search, Bell, Sun, Moon, Activity } from 'lucide-react';
 
 interface TopNavProps {
   darkMode?: boolean;
@@ -15,11 +15,17 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
     }`}>
       {/* Left: System Title & Sub-tagline */}
       <div className="flex flex-col">
-        <h1 className={`text-sm font-extrabold tracking-tight leading-tight ${
-          darkMode ? 'text-white' : 'text-slate-900'
-        }`}>
-          Clinical Trials Management System
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className={`text-sm font-extrabold tracking-tight leading-tight ${
+            darkMode ? 'text-white' : 'text-slate-900'
+          }`}>
+            Clinical Trials Management System
+          </h1>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            NEON LIVE
+          </span>
+        </div>
         <p className={`text-[10px] font-semibold ${
           darkMode ? 'text-cyan-400' : 'text-emerald-700'
         }`}>
@@ -36,7 +42,7 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
             placeholder="Search studies, patients, sites, or reports (Ctrl + K)"
             className={`w-full border rounded-lg pl-8 pr-14 py-1.5 text-xs focus:outline-none transition shadow-sm ${
               darkMode
-                ? 'bg-[#1e293b] border-slate-700 text-slate-100 placeholder-slate-400 focus:border-cyan-500'
+                ? 'bg-[#1e293b] border-slate-700 text-slate-100 placeholder-slate-400 focus:border-cyan-400'
                 : 'bg-slate-100 border-slate-300 text-slate-800 placeholder-slate-400 focus:border-emerald-600 focus:bg-white'
             }`}
           />
@@ -55,22 +61,22 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
             type="button"
             onClick={() => setDarkMode((prev) => !prev)}
             aria-label="Toggle theme"
-            className={`p-2 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold shadow-xs ${
+            className={`px-3 py-1.5 rounded-lg transition-all duration-300 cursor-pointer flex items-center gap-2 text-xs font-bold shadow-sm ${
               darkMode
-                ? 'bg-[#1e293b] text-amber-300 hover:bg-[#334155] border border-slate-700'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
+                ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40'
+                : 'bg-gradient-to-r from-slate-800 to-slate-900 text-white hover:from-slate-700 hover:to-slate-800 shadow'
             }`}
             title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {darkMode ? (
               <>
-                <Sun className="w-4 h-4 text-amber-400" />
-                <span className="text-[11px] hidden sm:inline">Light</span>
+                <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" />
+                <span>Light Mode</span>
               </>
             ) : (
               <>
-                <Moon className="w-4 h-4 text-slate-700" />
-                <span className="text-[11px] hidden sm:inline">Dark</span>
+                <Moon className="w-4 h-4 text-cyan-300" />
+                <span>Dark Mode</span>
               </>
             )}
           </button>

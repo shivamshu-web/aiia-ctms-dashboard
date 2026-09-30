@@ -40,6 +40,9 @@ export default function FullDashboardPage() {
     const savedTheme = localStorage.getItem('aiia-theme');
     if (savedTheme === 'dark') {
       setDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
 
     setCurrentDateTime(new Date());
@@ -54,6 +57,11 @@ export default function FullDashboardPage() {
     setDarkMode((prev) => {
       const nextVal = typeof val === 'function' ? val(prev) : val;
       localStorage.setItem('aiia-theme', nextVal ? 'dark' : 'light');
+      if (nextVal) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
       return nextVal;
     });
   };
@@ -86,6 +94,7 @@ export default function FullDashboardPage() {
   const [isPVOpen, setIsPVOpen] = useState(false);
 
   const refreshData = () => {
+    setLoading(true);
     fetch('/api/dashboard')
       .then((res) => res.json())
       .then((json) => {
@@ -108,16 +117,16 @@ export default function FullDashboardPage() {
 
   return (
     <div className={`flex h-screen w-screen overflow-hidden font-sans transition-colors duration-300 ${
-      darkMode ? 'bg-[#0b0f17] text-slate-100' : 'bg-[#eef2f6] text-slate-800'
+      darkMode ? 'bg-[#0a0f18] text-slate-100' : 'bg-[#eef2f6] text-slate-800'
     }`}>
-      {/* 1. Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* 1. Sidebar with Theme awareness */}
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} darkMode={darkMode} />
 
-      {/* 2. Main Area with Deep Rich Background */}
+      {/* 2. Main Area with Depth Background */}
       <div className={`flex-1 flex flex-col min-w-0 h-screen overflow-hidden transition-colors duration-300 ${
-        darkMode ? 'bg-[#0b0f17]' : 'bg-[#eef2f6]'
+        darkMode ? 'bg-[#0a0f18]' : 'bg-[#eef2f6]'
       }`}>
-        {/* TopNav */}
+        {/* TopNav with Switcher */}
         <TopNav darkMode={darkMode} setDarkMode={handleToggleDarkMode} />
 
         {/* Dashboard Content */}
@@ -136,12 +145,12 @@ export default function FullDashboardPage() {
               {/* Premium Welcome Banner */}
               <div className={`rounded-xl p-4 flex justify-between items-center shadow-lg transition-all duration-300 border ${
                 darkMode
-                  ? 'bg-gradient-to-r from-[#111c2e] via-[#13283c] to-[#0c1824] border-cyan-500/20 text-white shadow-cyan-950/30'
+                  ? 'bg-gradient-to-r from-[#111e33] via-[#132c45] to-[#0d1c2c] border-cyan-500/30 text-white shadow-cyan-950/40'
                   : 'bg-gradient-to-r from-[#044e39] via-[#056349] to-[#0f766e] border-emerald-600/30 text-white shadow-emerald-950/20'
               }`}>
                 <div className="flex items-center gap-3.5">
                   <div className={`w-12 h-12 rounded-full overflow-hidden border-2 shadow-md flex-shrink-0 ${
-                    darkMode ? 'border-cyan-400 shadow-cyan-500/30 bg-slate-900' : 'border-emerald-300 bg-emerald-950'
+                    darkMode ? 'border-cyan-400 shadow-cyan-500/40 bg-slate-900' : 'border-emerald-300 bg-emerald-950'
                   }`}>
                     <img
                       src="/doctor.jpg"
@@ -161,7 +170,7 @@ export default function FullDashboardPage() {
                     <p className={`text-xs font-semibold mt-0.5 ${darkMode ? 'text-slate-300' : 'text-emerald-100'}`}>
                       All India Institute of Ayurveda (AIIA)
                     </p>
-                    <p className={`text-[10px] mt-0.5 font-medium ${darkMode ? 'text-cyan-400/90' : 'text-emerald-200'}`}>
+                    <p className={`text-[10px] mt-0.5 font-medium ${darkMode ? 'text-cyan-400' : 'text-emerald-200'}`}>
                       Clinical Research • Pharmacovigilance • Global Health Impact
                     </p>
                   </div>
@@ -192,21 +201,19 @@ export default function FullDashboardPage() {
                   <div className="grid grid-cols-6 gap-2.5">
                     <MetricCard
                       title="Total Studies"
-                      value={data?.metrics?.totalStudies ?? '2'}
+                      value={data?.metrics?.totalStudies ?? '5'}
                       sub="↑ 2 new this month"
                       accent="border-t-blue-500"
                       dotColor="bg-blue-400"
-                      glow={darkMode ? "shadow-blue-500/5" : ""}
                       valueColor={darkMode ? "text-blue-400" : "text-slate-900"}
                       darkMode={darkMode}
                     />
                     <MetricCard
                       title="Active Patients"
-                      value={data?.metrics?.activePatients ?? '1'}
+                      value={data?.metrics?.activePatients ?? '985'}
                       sub="↑ 12% this month"
                       accent="border-t-emerald-500"
                       dotColor="bg-emerald-400"
-                      glow={darkMode ? "shadow-emerald-500/5" : ""}
                       valueColor={darkMode ? "text-emerald-400" : "text-slate-900"}
                       darkMode={darkMode}
                     />
@@ -216,7 +223,6 @@ export default function FullDashboardPage() {
                       sub="↑ 3 new this week"
                       accent="border-t-purple-500"
                       dotColor="bg-purple-400"
-                      glow={darkMode ? "shadow-purple-500/5" : ""}
                       valueColor={darkMode ? "text-purple-400" : "text-slate-900"}
                       darkMode={darkMode}
                       onClick={() => setIsPVOpen(true)}
@@ -227,7 +233,6 @@ export default function FullDashboardPage() {
                       sub="View Details →"
                       accent="border-t-amber-500"
                       dotColor="bg-amber-400"
-                      glow={darkMode ? "shadow-amber-500/5" : ""}
                       valueColor={darkMode ? "text-amber-400" : "text-slate-900"}
                       darkMode={darkMode}
                     />
@@ -237,7 +242,6 @@ export default function FullDashboardPage() {
                       sub="↑ 2% this month"
                       accent="border-t-teal-500"
                       dotColor="bg-teal-400"
-                      glow={darkMode ? "shadow-teal-500/5" : ""}
                       valueColor={darkMode ? "text-teal-400" : "text-slate-900"}
                       darkMode={darkMode}
                       onClick={() => setIsDataQualityOpen(true)}
@@ -248,7 +252,6 @@ export default function FullDashboardPage() {
                       sub="View All →"
                       accent="border-t-rose-500"
                       dotColor="bg-rose-400"
-                      glow={darkMode ? "shadow-rose-500/5" : ""}
                       valueColor={darkMode ? "text-rose-400" : "text-slate-900"}
                       darkMode={darkMode}
                     />
@@ -258,7 +261,7 @@ export default function FullDashboardPage() {
                   <div className="grid grid-cols-12 gap-4">
                     {/* Trend Chart Card */}
                     <div className={`col-span-7 border rounded-xl p-3.5 shadow-md transition-colors duration-300 ${
-                      darkMode ? 'bg-[#111827] border-slate-800' : 'bg-white border-slate-200/90'
+                      darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                     }`}>
                       <div className="flex justify-between items-center mb-3">
                         <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
@@ -300,36 +303,36 @@ export default function FullDashboardPage() {
 
                     {/* Donut Status Card */}
                     <div className={`col-span-5 border rounded-xl p-3.5 flex flex-col justify-between shadow-md transition-colors duration-300 ${
-                      darkMode ? 'bg-[#111827] border-slate-800' : 'bg-white border-slate-200/90'
+                      darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                     }`}>
                       <div className="flex justify-between items-center">
                         <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
                           Study Status Breakdown
                         </span>
                         <button type="button" onClick={refreshData} title="Refresh Data" className="text-slate-400 hover:text-cyan-400 transition">
-                          <RotateCcw className="w-3.5 h-3.5 cursor-pointer" />
+                          <RotateCcw className={`w-3.5 h-3.5 cursor-pointer ${loading ? 'animate-spin' : ''}`} />
                         </button>
                       </div>
                       <div className="flex items-center justify-between py-2">
                         <div className="relative w-28 h-28 flex items-center justify-center">
                           <div className="w-28 h-28 rounded-full border-[12px] border-emerald-500 border-t-blue-500 border-r-amber-500 border-b-purple-500 shadow-md"></div>
                           <div className="absolute text-center">
-                            <span className={`text-xl font-black leading-none ${darkMode ? 'text-white' : 'text-slate-900'}`}>{data?.metrics?.totalStudies ?? '2'}</span>
+                            <span className={`text-xl font-black leading-none ${darkMode ? 'text-white' : 'text-slate-900'}`}>{data?.metrics?.totalStudies ?? '5'}</span>
                             <p className={`text-[9px] font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Total Studies</p>
                           </div>
                         </div>
                         <div className="text-[11px] space-y-1.5 font-semibold">
                           <div className="flex items-center justify-between gap-4">
                             <span className="flex items-center gap-1.5 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Planning</span>
-                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>0</span>
+                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>1</span>
                           </div>
                           <div className="flex items-center justify-between gap-4">
                             <span className="flex items-center gap-1.5 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>Ongoing</span>
-                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>2</span>
+                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>3</span>
                           </div>
                           <div className="flex items-center justify-between gap-4">
                             <span className="flex items-center gap-1.5 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-500"></span>On Hold</span>
-                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>0</span>
+                            <span className={`font-bold ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>1</span>
                           </div>
                           <div className="flex items-center justify-between gap-4">
                             <span className="flex items-center gap-1.5 text-purple-400"><span className="w-2 h-2 rounded-full bg-purple-500"></span>Completed</span>
@@ -340,14 +343,14 @@ export default function FullDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Active Studies Table with High Visibility Headers */}
+                  {/* Active Studies Table */}
                   <div className="grid grid-cols-12 gap-4">
                     <div className={`col-span-8 border rounded-xl p-3.5 shadow-md transition-colors duration-300 ${
-                      darkMode ? 'bg-[#111827] border-slate-800' : 'bg-white border-slate-200/90'
+                      darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                     }`}>
                       <div className="flex justify-between items-center mb-2.5">
                         <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
-                          Active Clinical Studies
+                          Active Clinical Studies (Neon DB Synced)
                         </span>
                         <button type="button" onClick={() => setIsCreateStudyOpen(true)} className="text-[10px] text-cyan-400 hover:text-cyan-300 font-extrabold cursor-pointer">
                           + Add Protocol
@@ -356,7 +359,7 @@ export default function FullDashboardPage() {
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-[11px]">
                           <thead className={`uppercase text-[9px] border-b ${
-                            darkMode ? 'bg-[#1f2937] text-slate-300 font-bold border-slate-700/80' : 'bg-slate-100/80 text-slate-600 font-bold border-slate-200'
+                            darkMode ? 'bg-[#18273d] text-slate-300 font-bold border-slate-700/80' : 'bg-slate-100/80 text-slate-600 font-bold border-slate-200'
                           }`}>
                             <tr>
                               <th className="px-2.5 py-2">Study ID</th>
@@ -395,7 +398,7 @@ export default function FullDashboardPage() {
 
                     {/* Safety Overview */}
                     <div className={`col-span-4 border rounded-xl p-3.5 flex flex-col justify-between shadow-md transition-colors duration-300 ${
-                      darkMode ? 'bg-[#111827] border-slate-800' : 'bg-white border-slate-200/90'
+                      darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                     }`}>
                       <div>
                         <div className="flex justify-between items-center mb-2">
@@ -430,7 +433,7 @@ export default function FullDashboardPage() {
                         type="button"
                         onClick={() => setIsPVOpen(true)}
                         className={`w-full py-1.5 rounded-lg text-xs font-bold mt-2 transition cursor-pointer border ${
-                          darkMode ? 'bg-[#1e293b] hover:bg-[#334155] text-cyan-300 border-slate-700' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300 shadow-xs'
+                          darkMode ? 'bg-[#1b2b42] hover:bg-[#253d5e] text-cyan-300 border-slate-700' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300 shadow-xs'
                         }`}
                       >
                         View PV Dashboard →
@@ -442,7 +445,7 @@ export default function FullDashboardPage() {
                 {/* Right 3 Cols: Quick Actions with Vivid Buttons */}
                 <div className="col-span-3 space-y-4">
                   <div className={`border rounded-xl p-3.5 space-y-2 shadow-md transition-colors duration-300 ${
-                    darkMode ? 'bg-[#111827] border-slate-800' : 'bg-white border-slate-200/90'
+                    darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                   }`}>
                     <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
                       Quick Actions
@@ -459,7 +462,7 @@ export default function FullDashboardPage() {
 
                   {/* Deadlines */}
                   <div className={`border rounded-xl p-3.5 shadow-md transition-colors duration-300 ${
-                    darkMode ? 'bg-[#111827] border-slate-800' : 'bg-white border-slate-200/90'
+                    darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                   }`}>
                     <div className="flex justify-between items-center mb-2.5">
                       <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
@@ -477,7 +480,7 @@ export default function FullDashboardPage() {
 
                   {/* Recent Activity */}
                   <div className={`border rounded-xl p-3.5 shadow-md transition-colors duration-300 ${
-                    darkMode ? 'bg-[#111827] border-slate-800' : 'bg-white border-slate-200/90'
+                    darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                   }`}>
                     <div className="flex justify-between items-center mb-2.5">
                       <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
@@ -514,12 +517,12 @@ export default function FullDashboardPage() {
   );
 }
 
-function MetricCard({ title, value, sub, dotColor, valueColor, accent, glow, darkMode, onClick }: any) {
+function MetricCard({ title, value, sub, dotColor, valueColor, accent, darkMode, onClick }: any) {
   return (
     <div
       onClick={onClick}
-      className={`border border-t-4 rounded-xl p-3 flex flex-col justify-between transition-all duration-200 shadow-md ${accent} ${glow} ${
-        darkMode ? 'bg-[#111827] border-slate-800 hover:border-slate-700' : 'bg-white border-slate-200/90 hover:shadow-lg'
+      className={`border border-t-4 rounded-xl p-3 flex flex-col justify-between transition-all duration-200 shadow-md ${accent} ${
+        darkMode ? 'bg-[#111c2e] border-slate-800 hover:border-slate-700' : 'bg-white border-slate-200/90 hover:shadow-lg'
       } ${onClick ? 'cursor-pointer' : ''}`}
     >
       <div className="flex items-center justify-between">
@@ -543,7 +546,7 @@ function ActionButton({ title, icon: Icon, primary, darkMode, onClick }: any) {
         primary
           ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-emerald-950/40'
           : darkMode
-          ? 'bg-[#1e293b] hover:bg-[#334155] text-slate-200 border border-slate-700'
+          ? 'bg-[#18273d] hover:bg-[#223652] text-slate-200 border border-slate-700'
           : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-300'
       }`}
     >
