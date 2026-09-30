@@ -82,11 +82,16 @@ export default function FullDashboardPage() {
             />
           ) : (
             <>
-              {/* Welcome Banner */}
+              {/* Welcome Banner with Doctor Photo */}
               <div className="rounded-xl bg-gradient-to-r from-[#0d2847] via-[#103258] to-[#0c1f36] border border-slate-800 p-4 flex justify-between items-center shadow-lg">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-full bg-emerald-700/30 border border-emerald-500/40 flex items-center justify-center font-bold text-white text-base shadow">
-                    AIIA
+                  {/* Doctor Profile Photo replaces AIIA text circle */}
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-emerald-400/60 shadow-md flex-shrink-0 bg-slate-800">
+                    <img
+                      src="/doctor.jpg"
+                      alt="Dr. Aanchal Singh"
+                      className="w-full h-full object-cover object-top"
+                    />
                   </div>
                   <div>
                     <h1 className="text-base font-bold text-white">Welcome, Dr. Aanchal Singh</h1>
