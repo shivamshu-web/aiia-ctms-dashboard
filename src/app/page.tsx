@@ -18,7 +18,7 @@ import {
 import CreateStudyModal from '@/components/CreateStudyModal';
 import AddPatientModal from '@/components/AddPatientModal';
 import ReportSafetyModal from '@/components/ReportSafetyModal';
-import ModuleViews from '@/components/ModuleView';
+import ModuleViews from '@/components/ModuleViews';
 import UploadDataModal from '@/components/UploadDataModal';
 import DataQualityModal from '@/components/DataQualityModal';
 import PVDashboardModal from '@/components/PVDashboardModal';
