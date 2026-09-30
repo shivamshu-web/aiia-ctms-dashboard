@@ -1,112 +1,15 @@
 {
   "pages": {
-    "/_not-found/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/_not-found/page-38af22abb7b4fbad.js"
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
     ],
     "/layout": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/css/d3b45773ffab914e.css",
-      "static/chunks/app/layout-aee74430fb4ee658.js"
-    ],
-    "/(auth)/register/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(auth)/register/page-7b2a333f49e3b745.js"
-    ],
-    "/(auth)/login/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(auth)/login/page-a19eaa04363df9bd.js"
-    ],
-    "/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/5-5344ae1cff5da8b5.js",
-      "static/chunks/app/page-2707e2ade68b99c7.js"
-    ],
-    "/(dashboard)/clinical-trials/studies/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(dashboard)/clinical-trials/studies/page-34d8cf15589c1a3a.js"
-    ],
-    "/(dashboard)/layout": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/5-5344ae1cff5da8b5.js",
-      "static/chunks/app/(dashboard)/layout-7ea573c5059a31d8.js"
-    ],
-    "/(dashboard)/compliance/ctri/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(dashboard)/compliance/ctri/page-e45e2939dd8f37c2.js"
-    ],
-    "/(dashboard)/clinical-trials/patients/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(dashboard)/clinical-trials/patients/page-d6be8b5500c1e648.js"
-    ],
-    "/(dashboard)/clinical-trials/monitoring/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(dashboard)/clinical-trials/monitoring/page-e967134f61b1cea6.js"
-    ],
-    "/(dashboard)/pharmacovigilance/adr-sae/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(dashboard)/pharmacovigilance/adr-sae/page-e7e3e1601506c28b.js"
-    ],
-    "/(dashboard)/interoperability/cdisc/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(dashboard)/interoperability/cdisc/page-a66604389ad8824c.js"
-    ],
-    "/(dashboard)/interoperability/fhir/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(dashboard)/interoperability/fhir/page-89ce001da19089a1.js"
-    ],
-    "/(dashboard)/compliance/audit-logs/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(dashboard)/compliance/audit-logs/page-ca69f335ef36384e.js"
-    ],
-    "/(dashboard)/pharmacovigilance/signals/page": [
-      "static/chunks/webpack-1796d5ecd61cbd74.js",
-      "static/chunks/fd9d1056-5d28e7cef683116b.js",
-      "static/chunks/23-aa733f3f8a7f64c9.js",
-      "static/chunks/main-app-3301d3fb1ab13fd4.js",
-      "static/chunks/app/(dashboard)/pharmacovigilance/signals/page-fd4873258ec4757d.js"
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
     ]
   }
 }

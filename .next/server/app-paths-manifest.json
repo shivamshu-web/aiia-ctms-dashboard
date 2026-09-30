@@ -1,22 +1,5 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/(auth)/register/page": "app/(auth)/register/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/api/auth/route": "app/api/auth/route.js",
-  "/api/fhir/route": "app/api/fhir/route.js",
-  "/api/patients/route": "app/api/patients/route.js",
-  "/api/studies/route": "app/api/studies/route.js",
   "/page": "app/page.js",
-  "/(dashboard)/clinical-trials/studies/page": "app/(dashboard)/clinical-trials/studies/page.js",
-  "/(dashboard)/compliance/ctri/page": "app/(dashboard)/compliance/ctri/page.js",
-  "/(dashboard)/clinical-trials/patients/page": "app/(dashboard)/clinical-trials/patients/page.js",
-  "/(dashboard)/clinical-trials/monitoring/page": "app/(dashboard)/clinical-trials/monitoring/page.js",
-  "/(dashboard)/pharmacovigilance/adr-sae/page": "app/(dashboard)/pharmacovigilance/adr-sae/page.js",
-  "/(dashboard)/interoperability/cdisc/page": "app/(dashboard)/interoperability/cdisc/page.js",
-  "/(dashboard)/interoperability/fhir/page": "app/(dashboard)/interoperability/fhir/page.js",
-  "/(dashboard)/page": "app/(dashboard)/page.js",
-  "/(dashboard)/compliance/audit-logs/page": "app/(dashboard)/compliance/audit-logs/page.js",
-  "/(dashboard)/pharmacovigilance/signals/page": "app/(dashboard)/pharmacovigilance/signals/page.js",
-  "/api/safety-reports/route": "app/api/safety-reports/route.js",
   "/api/dashboard/route": "app/api/dashboard/route.js"
 }
