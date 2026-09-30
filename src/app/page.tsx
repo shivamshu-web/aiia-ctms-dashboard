@@ -89,7 +89,7 @@ export default function FullDashboardPage() {
                     AIIA
                   </div>
                   <div>
-                    <h1 className="text-base font-bold text-white">Welcome, Dr. Meera Sharma</h1>
+                    <h1 className="text-base font-bold text-white">Welcome, Dr. Aanchal Singh</h1>
                     <p className="text-xs text-slate-300 font-medium">All India Institute of Ayurveda (AIIA)</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">Clinical Research | Pharmacovigilance | Better Health for All</p>
                   </div>

@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         type: type || 'ADR',
         severity: severity || 'MILD',
         description: description || 'Adverse event observed during trial.',
-        reportedBy: reportedBy || 'Dr. Meera Sharma',
+        reportedBy: reportedBy || 'Dr. Aanchal Singh',
       },
     });
 

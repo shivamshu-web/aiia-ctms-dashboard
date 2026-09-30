@@ -30,7 +30,7 @@ export default function ReportSafetyModal({ isOpen, studies, onClose, onSuccess 
     type: 'ADR',
     severity: 'MILD',
     description: '',
-    reportedBy: 'Dr. Meera Sharma',
+    reportedBy: 'Dr. Aanchal Singh',
   });
 
   // Automatically select the first available study code
@@ -84,7 +84,7 @@ export default function ReportSafetyModal({ isOpen, studies, onClose, onSuccess 
         type: 'ADR',
         severity: 'MILD',
         description: '',
-        reportedBy: 'Dr. Meera Sharma',
+        reportedBy: 'Dr. Aanchal Singh',
       });
       onSuccess();
       onClose();

@@ -41,7 +41,7 @@ export default function TopNav() {
             <User className="w-4 h-4" />
           </div>
           <div className="leading-tight text-left">
-            <p className="text-xs font-semibold text-white">Dr. Meera Sharma</p>
+            <p className="text-xs font-semibold text-white">Dr. Aanchal Singh</p>
             <p className="text-[10px] text-slate-400">Principal Investigator</p>
           </div>
         </div>
