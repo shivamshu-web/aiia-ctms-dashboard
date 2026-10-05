@@ -107,7 +107,7 @@ async function initSchema(client: any) {
       audit_details TEXT
     );
 
-    -- 9. PV: ADR / SAE Reports (NPvCC)
+    -- 9. PV: Safety Reports
     CREATE TABLE IF NOT EXISTS pv_safety_reports (
       id SERIAL PRIMARY KEY,
       report_id VARCHAR(50) UNIQUE NOT NULL,
@@ -135,7 +135,7 @@ async function initSchema(client: any) {
       action_taken TEXT
     );
 
-    -- 11. PV: MedDRA / WHODrug Dictionary Mapping
+    -- 11. PV: MedDRA / WHODrug
     CREATE TABLE IF NOT EXISTS pv_meddra_whodrug (
       id SERIAL PRIMARY KEY,
       soc_term TEXT NOT NULL,
@@ -146,7 +146,7 @@ async function initSchema(client: any) {
       active_phytochemical TEXT NOT NULL
     );
 
-    -- 12. PV: Periodic Safety Reports (PSUR/PBRER)
+    -- 12. PV: Periodic Reports
     CREATE TABLE IF NOT EXISTS pv_periodic_reports (
       id SERIAL PRIMARY KEY,
       report_code VARCHAR(50) UNIQUE NOT NULL,
@@ -156,6 +156,53 @@ async function initSchema(client: any) {
       total_ae_recorded INT NOT NULL,
       benefit_risk_conclusion VARCHAR(100) DEFAULT 'Favourable Benefit-Risk',
       submission_status VARCHAR(50) DEFAULT 'Approved by NPvCC'
+    );
+
+    -- 13. COMPLIANCE: CTRI Registrations
+    CREATE TABLE IF NOT EXISTS compliance_ctri (
+      id SERIAL PRIMARY KEY,
+      study_id VARCHAR(50) NOT NULL,
+      ctri_reg_no VARCHAR(100) UNIQUE NOT NULL,
+      who_ictrp_synced VARCHAR(20) DEFAULT 'Yes (Live)',
+      reg_date DATE NOT NULL,
+      next_annual_update_due DATE NOT NULL,
+      primary_sponsor TEXT NOT NULL,
+      recruitment_status VARCHAR(50) DEFAULT 'Open to Recruitment',
+      verification_status VARCHAR(50) DEFAULT 'CTRI Verified'
+    );
+
+    -- 14. COMPLIANCE: GCP-ASU & ICMR Standards
+    CREATE TABLE IF NOT EXISTS compliance_gcp_icmr (
+      id SERIAL PRIMARY KEY,
+      rule_domain TEXT NOT NULL,
+      guideline_ref VARCHAR(100) NOT NULL,
+      requirement_summary TEXT NOT NULL,
+      compliance_score INT NOT NULL,
+      last_audit_date DATE NOT NULL,
+      status VARCHAR(50) DEFAULT 'Fully Compliant'
+    );
+
+    -- 15. COMPLIANCE: NDCT Rules 2019
+    CREATE TABLE IF NOT EXISTS compliance_ndct_rules (
+      id SERIAL PRIMARY KEY,
+      rule_section VARCHAR(50) NOT NULL,
+      form_type VARCHAR(50) NOT NULL,
+      clause_title TEXT NOT NULL,
+      regulatory_authority VARCHAR(100) DEFAULT 'CDSCO / DCGI',
+      applicability TEXT NOT NULL,
+      status VARCHAR(50) DEFAULT 'Statutory Approved'
+    );
+
+    -- 16. COMPLIANCE: Audits & Inspections
+    CREATE TABLE IF NOT EXISTS compliance_audits (
+      id SERIAL PRIMARY KEY,
+      audit_code VARCHAR(50) UNIQUE NOT NULL,
+      inspecting_body TEXT NOT NULL,
+      site_audited TEXT NOT NULL,
+      audit_type VARCHAR(100) NOT NULL,
+      audit_date DATE NOT NULL,
+      findings_count INT DEFAULT 0,
+      capa_status VARCHAR(50) DEFAULT 'CAPA Closed'
     );
   `);
 
@@ -195,7 +242,6 @@ async function initSchema(client: any) {
       ('4. Site Close-Out Visits (COV) & Investigator Signatures', 'In Progress (90%)', 'AIIA New Delhi and NIA Jaipur COV visits completed. BHU close-out scheduled for next week.'),
       ('5. Clinical Study Report (CSR) & CTRI Result Disclosure', 'Draft Ready', 'ICH E3 structured CSR drafting underway for submission to Ministry of Ayush.');
 
-      -- SEED PHARMACOVIGILANCE
       INSERT INTO pv_safety_reports (report_id, study_id, subject_id, suspected_herb, adverse_event, severity, causality_score, reported_date, regulatory_deadline, status) VALUES
       ('PV-AIIA-2026-001', 'AIIA-CT-001', 'SUBJ-AIIA-0104', 'Nishamalaki Vati (Amalaki component)', 'Transient Mild Gastric Hyperacidity (Amlapitta)', 'Mild', 'Probable (WHO-UMC)', '2026-09-24', '15 Days Routine', 'Submitted to CDSCO'),
       ('PV-AIIA-2026-002', 'AIIA-CT-002', 'SUBJ-AIIA-0211', 'Guduchi Swarasa Extract', 'Mild Pruritic Skin Rash (Kandu)', 'Moderate', 'Possible (Naranjo Score 4)', '2026-09-27', '15 Days Routine', 'Under Review'),
@@ -217,6 +263,31 @@ async function initSchema(client: any) {
       ('PSUR-2026-H1', 'Periodic Safety Update Report: Nishamalaki Protocol', '01 Jan 2026 - 30 Jun 2026', 412, 14, 'Favourable Benefit-Risk', 'Approved by NPvCC'),
       ('PSUR-2026-H2', 'Periodic Safety Update Report: Rasayana Oncology Adjuvant', '01 Apr 2026 - 30 Sep 2026', 248, 8, 'Favourable Benefit-Risk', 'Submitted to CDSCO'),
       ('PBRER-2026-Q3', 'Periodic Benefit-Risk Evaluation Report: Ashwagandha Extract', '01 Jul 2026 - 30 Sep 2026', 196, 5, 'Acceptable Safety Margin', 'Approved by NPvCC');
+
+      -- SEED COMPLIANCE & REGULATORY
+      INSERT INTO compliance_ctri (study_id, ctri_reg_no, who_ictrp_synced, reg_date, next_annual_update_due, primary_sponsor, recruitment_status, verification_status) VALUES
+      ('AIIA-CT-001', 'CTRI/2025/03/048912', 'Yes (Live)', '2025-03-14', '2027-03-14', 'All India Institute of Ayurveda, New Delhi', 'Open to Recruitment', 'CTRI Verified'),
+      ('AIIA-CT-002', 'CTRI/2025/08/059124', 'Yes (Live)', '2025-08-02', '2027-08-02', 'Ministry of Ayush / AIIA Research Fund', 'Open to Recruitment', 'CTRI Verified'),
+      ('AIIA-CT-003', 'CTRI/2025/05/051280', 'Yes (Live)', '2025-05-18', '2026-11-18', 'AIIA Collaborative Research Consortium', 'Temporarily Suspended', 'Audit Flag'),
+      ('AIIA-CT-004', 'CTRI/2025/09/061299', 'Yes (Live)', '2025-09-10', '2027-09-10', 'National Medicinal Plants Board (NMPB)', 'Open to Recruitment', 'CTRI Verified'),
+      ('AIIA-CT-005', 'CTRI/2026/01/072111', 'Pending Push', '2026-01-22', '2027-01-22', 'All India Institute of Ayurveda', 'Not Yet Recruiting', 'Provisional Cleared');
+
+      INSERT INTO compliance_gcp_icmr (rule_domain, guideline_ref, requirement_summary, compliance_score, last_audit_date, status) VALUES
+      ('Ethics Committee Registration', 'GCP-ASU Sec 3.2 & ICMR 2017', 'Registration with Central Licensing Authority / CDSCO (Form CT-02)', 100, '2026-08-15', 'Fully Compliant'),
+      ('Informed Consent & AV Recording', 'NDCT Rule 25 & ICMR Guidelines', 'Audio-visual recording of informed consent process for vulnerable subjects', 98, '2026-09-20', 'Fully Compliant'),
+      ('Investigator Qualifications', 'GCP-ASU Sec 4.1', 'Documented MD/MS (Ayurveda) qualifications with valid GCP-ASU certification', 100, '2026-07-10', 'Fully Compliant'),
+      ('Subject Compensation for Injury', 'NDCT Rule 39 to 42', 'Institutional insurance & medical management assurance for trial-related SAEs', 96, '2026-09-01', 'Fully Compliant');
+
+      INSERT INTO compliance_ndct_rules (rule_section, form_type, clause_title, regulatory_authority, applicability, status) VALUES
+      ('Chapter V, Rule 22', 'Form CT-06', 'Permission to conduct clinical trial of new phytopharmaceutical / ASU drug', 'CDSCO / DCGI', 'Phase II & Phase III Clinical Trials', 'Statutory Approved'),
+      ('Chapter III, Rule 8', 'Form CT-02', 'Registration and renewal of Institutional Ethics Committee', 'CDSCO Ethics Cell', 'AIIA Apex Institutional Ethics Committee', 'Valid up to 2028'),
+      ('Chapter VI, Rule 31', 'Form CT-18', 'Inspection of clinical trial premises, sponsor site, and medical facilities', 'Central Licensing Authority', 'Annual Regulatory Oversight', 'Inspection Ready'),
+      ('Chapter VIII, Rule 39', 'Form CT-SAE', 'Mandatory 14-day SAE compensation adjudication protocol', 'Expert Committee / CDSCO', 'All Registered Clinical Subjects', 'Policy Active');
+
+      INSERT INTO compliance_audits (audit_code, inspecting_body, site_audited, audit_type, audit_date, findings_count, capa_status) VALUES
+      ('AUD-2026-01', 'CDSCO North Zone Inspectorate', 'AIIA Apex Centre, New Delhi', 'Routine GCP Regulatory Inspection', '2026-08-10', 0, 'No Observations (Clear)'),
+      ('AUD-2026-02', 'Ministry of Ayush Quality Assurance Cell', 'NIA Hospital, Jaipur', 'AYUSH GCP Protocol Adherence Audit', '2026-09-04', 1, 'CAPA Verified & Closed'),
+      ('AUD-2026-03', 'Independent Quality Auditor (Third-Party)', 'IMS BHU Varanasi Site', 'Trial Master File (TMF) & eCRF Audit', '2026-09-18', 2, 'CAPA Under Implementation');
     `);
   }
 }
@@ -274,7 +345,7 @@ export async function GET(req: Request) {
         data.closeoutChecklist = res.rows;
       }
 
-      // PHARMACOVIGILANCE TABS
+      // PV
       if (tab === 'safety-reporting' || tab === 'all') {
         const res = await client.query('SELECT * FROM pv_safety_reports ORDER BY id ASC');
         data.pvReports = res.rows;
@@ -290,6 +361,24 @@ export async function GET(req: Request) {
       if (tab === 'pv-reports' || tab === 'all') {
         const res = await client.query('SELECT * FROM pv_periodic_reports ORDER BY id ASC');
         data.periodicReports = res.rows;
+      }
+
+      // COMPLIANCE & REGULATORY
+      if (tab === 'ctri' || tab === 'all') {
+        const res = await client.query('SELECT * FROM compliance_ctri ORDER BY id ASC');
+        data.ctriList = res.rows;
+      }
+      if (tab === 'gcp' || tab === 'all') {
+        const res = await client.query('SELECT * FROM compliance_gcp_icmr ORDER BY id ASC');
+        data.gcpList = res.rows;
+      }
+      if (tab === 'ndct' || tab === 'all') {
+        const res = await client.query('SELECT * FROM compliance_ndct_rules ORDER BY id ASC');
+        data.ndctList = res.rows;
+      }
+      if (tab === 'audit' || tab === 'all') {
+        const res = await client.query('SELECT * FROM compliance_audits ORDER BY id ASC');
+        data.auditList = res.rows;
       }
 
       return NextResponse.json({ success: true, source: 'neon_postgres', data });

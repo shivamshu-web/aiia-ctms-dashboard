@@ -23,10 +23,13 @@ import {
   Radio,
   FileCode,
   FileSpreadsheet,
-  ShieldAlert,
-  Activity,
-  HeartPulse,
-  Send
+  FileText,
+  ShieldCheck,
+  Scale,
+  SearchCheck,
+  Globe,
+  Award,
+  BookOpen
 } from 'lucide-react';
 
 interface Props {
@@ -57,7 +60,11 @@ export default function ModuleViews({
     pvReports: [],
     pvSignals: [],
     meddraList: [],
-    periodicReports: []
+    periodicReports: [],
+    ctriList: [],
+    gcpList: [],
+    ndctList: [],
+    auditList: []
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,6 +104,12 @@ export default function ModuleViews({
   const meddraList: any[] = dbData.meddraList || [];
   const periodicReportsList: any[] = dbData.periodicReports || [];
 
+  // Compliance
+  const ctriList: any[] = dbData.ctriList || [];
+  const gcpList: any[] = dbData.gcpList || [];
+  const ndctList: any[] = dbData.ndctList || [];
+  const auditList: any[] = dbData.auditList || [];
+
   const filteredStudies = studiesList.filter((s: any) => {
     const matchesSearch =
       (s.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -126,15 +139,25 @@ export default function ModuleViews({
       case 'closeout':
         return { category: 'CLINICAL TRIALS', title: 'Trial Close-Out & Archiving', icon: CheckCircle2, desc: 'Trial Master File (TMF) and clinical close-out checklist queried live from database.' };
       
-      // Pharmacovigilance (NPvCC)
+      // Pharmacovigilance
       case 'safety-reporting':
-        return { category: 'PHARMACOVIGILANCE (NPVCC)', title: 'ADR / SAE Reporting (PvPI Compliant)', icon: AlertTriangle, desc: 'National Pharmacovigilance Centre for ASU Drugs: Expedited adverse reaction logs and WHO-UMC causality causality.' };
+        return { category: 'PHARMACOVIGILANCE (NPVCC)', title: 'ADR / SAE Reporting (PvPI Compliant)', icon: AlertTriangle, desc: 'National Pharmacovigilance Centre for ASU Drugs: Expedited adverse reaction logs and WHO-UMC causality.' };
       case 'signal-detection':
         return { category: 'PHARMACOVIGILANCE (NPVCC)', title: 'Safety Signal Detection Engine', icon: Radio, desc: 'Statistical Disproportionality Scoring (PRR, ROR) and algorithmic pharmacovigilance surveillance on herbal formulations.' };
       case 'meddra':
         return { category: 'PHARMACOVIGILANCE (NPVCC)', title: 'MedDRA / WHODrug Taxonomy Mapping', icon: FileCode, desc: 'Standardized Medical Dictionary (SOC, PT) with botanical Ayurvedic herbal ingredient and phytochemical mappings.' };
       case 'pv-reports':
         return { category: 'PHARMACOVIGILANCE (NPVCC)', title: 'Periodic Safety Update Reports (PSUR / PBRER)', icon: FileSpreadsheet, desc: 'Periodic Benefit-Risk Evaluation Reports, CIOMS Form-I auto-generator for Ministry of Ayush & CDSCO.' };
+
+      // Compliance & Regulatory
+      case 'ctri':
+        return { category: 'COMPLIANCE & REGULATORY', title: 'CTRI Registration & WHO ICTRP Sync', icon: FileText, desc: 'Clinical Trials Registry - India submission tracking, primary registry synchronization and annual renewal logs.' };
+      case 'gcp':
+        return { category: 'COMPLIANCE & REGULATORY', title: 'GCP-ASU & ICMR Ethical Standards', icon: ShieldCheck, desc: 'Good Clinical Practice for Ayurveda, Siddha & Unani, audio-visual informed consent audit, and subject protection.' };
+      case 'ndct':
+        return { category: 'COMPLIANCE & REGULATORY', title: 'New Drugs & Clinical Trials Rules 2019', icon: Scale, desc: 'CDSCO Form CT-06 approvals, Institutional Ethics Committee registrations, and compensation rule enforcement.' };
+      case 'audit':
+        return { category: 'COMPLIANCE & REGULATORY', title: 'Audit & Regulatory Inspection Readiness', icon: SearchCheck, desc: 'CDSCO & Ministry of Ayush inspection audits, site observations, and Corrective & Preventive Action (CAPA) logs.' };
 
       default:
         return { category: 'SYSTEM', title: 'Clinical Module', icon: FolderKanban, desc: 'AIIA Clinical Trials Management System' };
@@ -544,7 +567,7 @@ export default function ModuleViews({
                         <span className="font-extrabold text-cyan-400">{m.progress_pct}% Completed</span>
                       </div>
                       <div className="w-full bg-slate-800/90 h-2.5 rounded-full overflow-hidden">
-                        <div className="bg-emerald-500 h-2.5 rounded-full" style={{ width: `${m.progress_pct}%` }}></div>
+                        <div className="bg-emerald-500 h-2.5 rounded-full transition-all duration-700" style={{ width: `${m.progress_pct}%` }}></div>
                       </div>
                       <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium">
                         <span>{m.stage_details}</span>
@@ -582,7 +605,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* ================= PHARMACOVIGILANCE 1: ADR / SAE REPORTING ================= */}
+          {/* PV 1: SAFETY REPORTING */}
           {tab === 'safety-reporting' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -593,10 +616,7 @@ export default function ModuleViews({
               </div>
 
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xs font-bold text-white">Individual Case Safety Reports (ICSR) - Table: pv_safety_reports</h2>
-                  <span className="text-[10px] text-emerald-400 font-bold">PvPI ASU Portal Linked</span>
-                </div>
+                <h2 className="text-xs font-bold text-white">Individual Case Safety Reports (ICSR) - Table: pv_safety_reports</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[11px] text-slate-300">
                     <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
@@ -641,7 +661,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* ================= PHARMACOVIGILANCE 2: SIGNAL DETECTION ================= */}
+          {/* PV 2: SIGNAL DETECTION */}
           {tab === 'signal-detection' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -652,10 +672,7 @@ export default function ModuleViews({
               </div>
 
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xs font-bold text-white">Algorithmic Safety Signal Detection Matrix (Table: pv_safety_signals)</h2>
-                  <span className="text-[10px] text-cyan-400 font-bold">Proportional Reporting Ratio (PRR) Engine</span>
-                </div>
+                <h2 className="text-xs font-bold text-white">Algorithmic Safety Signal Detection Matrix (Table: pv_safety_signals)</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[11px] text-slate-300">
                     <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
@@ -694,7 +711,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* ================= PHARMACOVIGILANCE 3: MEDDRA / WHODRUG ================= */}
+          {/* PV 3: MEDDRA / WHODRUG */}
           {tab === 'meddra' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -705,10 +722,7 @@ export default function ModuleViews({
               </div>
 
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xs font-bold text-white">Standardized MedDRA / WHODrug & ASU Taxonomy Mappings (Table: pv_meddra_whodrug)</h2>
-                  <span className="text-[10px] text-emerald-400 font-bold">Standard Terminology Engine</span>
-                </div>
+                <h2 className="text-xs font-bold text-white">Standardized MedDRA / WHODrug & ASU Taxonomy (Table: pv_meddra_whodrug)</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[11px] text-slate-300">
                     <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
@@ -716,9 +730,9 @@ export default function ModuleViews({
                         <th className="px-3 py-2.5">System Organ Class (SOC)</th>
                         <th className="px-3 py-2.5">Preferred Term (PT)</th>
                         <th className="px-3 py-2.5">MedDRA Code</th>
-                        <th className="px-3 py-2.5">Botanical Name (Ayurvedic ASU Herb)</th>
+                        <th className="px-3 py-2.5">Botanical Name (Ayurvedic Herb)</th>
                         <th className="px-3 py-2.5">WHODrug ID</th>
-                        <th className="px-3 py-2.5">Key Active Phytochemical</th>
+                        <th className="px-3 py-2.5">Active Phytochemical</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/80">
@@ -739,7 +753,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* ================= PHARMACOVIGILANCE 4: PV REPORTS ================= */}
+          {/* PV 4: PV REPORTS */}
           {tab === 'pv-reports' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -750,10 +764,7 @@ export default function ModuleViews({
               </div>
 
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xs font-bold text-white">Periodic Safety Update Reports (PSUR) & PBRER Filings (Table: pv_periodic_reports)</h2>
-                  <span className="text-[10px] text-emerald-400 font-bold">ICH E2C(R2) Regulatory Dossier</span>
-                </div>
+                <h2 className="text-xs font-bold text-white">Periodic Safety Update Reports (PSUR) (Table: pv_periodic_reports)</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[11px] text-slate-300">
                     <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
@@ -765,7 +776,6 @@ export default function ModuleViews({
                         <th className="px-3 py-2.5">Total AE Events</th>
                         <th className="px-3 py-2.5">Benefit-Risk Ratio</th>
                         <th className="px-3 py-2.5">Status</th>
-                        <th className="px-3 py-2.5 text-right">Dossier</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/80">
@@ -782,13 +792,199 @@ export default function ModuleViews({
                               {p.submission_status}
                             </span>
                           </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <button
-                              onClick={() => alert(`Exporting Official PSUR Dossier ${p.report_code} for Ministry of Ayush`)}
-                              className="px-2 py-1 rounded bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 font-semibold cursor-pointer text-[10px]"
-                            >
-                              Download PDF
-                            </button>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= COMPLIANCE 1: CTRI REGISTRATION ================= */}
+          {tab === 'ctri' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                <KpiCard label="Registered Protocols" val={`${ctriList.length} Studies`} sub="100% CTRI Cleared" color="text-cyan-400" />
+                <KpiCard label="WHO ICTRP Synchronization" val="Active & Live" sub="Global Registry Broadcast" color="text-emerald-400" />
+                <KpiCard label="Annual Updates Compliance" val="100% Completed" sub="Mandatory ICMR Timeline" color="text-teal-400" />
+                <KpiCard label="Verification Status" val="AIIA Apex Node" sub="Primary Sponsor Clearance" color="text-white" />
+              </div>
+
+              <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xs font-bold text-white">CTRI Registry Dossiers & WHO ICTRP Sync (Table: compliance_ctri)</h2>
+                  <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                    <Globe className="w-3.5 h-3.5" />
+                    WHO ICTRP Live Node
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[11px] text-slate-300">
+                    <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2.5">Study ID</th>
+                        <th className="px-3 py-2.5">Official CTRI Number</th>
+                        <th className="px-3 py-2.5">Registration Date</th>
+                        <th className="px-3 py-2.5">Next Annual Update Due</th>
+                        <th className="px-3 py-2.5">Primary Sponsor</th>
+                        <th className="px-3 py-2.5">Recruitment Status</th>
+                        <th className="px-3 py-2.5">Verification</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {ctriList.map((c: any) => (
+                        <tr key={c.id} className="hover:bg-slate-800/40">
+                          <td className="px-3 py-2.5 font-bold text-cyan-400">{c.study_id}</td>
+                          <td className="px-3 py-2.5 font-mono text-emerald-400 font-semibold">{c.ctri_reg_no}</td>
+                          <td className="px-3 py-2.5 text-slate-400">{c.reg_date}</td>
+                          <td className="px-3 py-2.5 text-amber-300 font-medium">{c.next_annual_update_due}</td>
+                          <td className="px-3 py-2.5 text-white max-w-xs truncate">{c.primary_sponsor}</td>
+                          <td className="px-3 py-2.5 text-slate-300">{c.recruitment_status}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                              {c.verification_status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= COMPLIANCE 2: GCP-ASU & ICMR ================= */}
+          {tab === 'gcp' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                <KpiCard label="AYUSH GCP Compliance" val="99.2%" sub="Standard Operating Procedures" color="text-emerald-400" />
+                <KpiCard label="ICMR Ethical Index" val="100% Cleared" sub="Human Biomedical Research 2017" color="text-cyan-400" />
+                <KpiCard label="Audio-Visual (AV) Consent" val="100% Coded" sub="Vulnerable Population Safeguards" color="text-teal-400" />
+                <KpiCard label="Investigator GCP Training" val="Certified (AIIA)" sub="Renewed Biennially" color="text-white" />
+              </div>
+
+              <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+                <h2 className="text-xs font-bold text-white">GCP for Ayurveda, Siddha & Unani (GCP-ASU) & ICMR Mandates (Table: compliance_gcp_icmr)</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[11px] text-slate-300">
+                    <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2.5">Rule Domain</th>
+                        <th className="px-3 py-2.5">Statutory Reference</th>
+                        <th className="px-3 py-2.5">Regulatory Requirement Summary</th>
+                        <th className="px-3 py-2.5">Compliance Score</th>
+                        <th className="px-3 py-2.5">Last Audit Date</th>
+                        <th className="px-3 py-2.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {gcpList.map((g: any) => (
+                        <tr key={g.id} className="hover:bg-slate-800/40">
+                          <td className="px-3 py-2.5 font-bold text-white">{g.rule_domain}</td>
+                          <td className="px-3 py-2.5 font-mono text-cyan-300">{g.guideline_ref}</td>
+                          <td className="px-3 py-2.5 text-slate-300 max-w-sm">{g.requirement_summary}</td>
+                          <td className="px-3 py-2.5 font-bold text-emerald-400">{g.compliance_score}%</td>
+                          <td className="px-3 py-2.5 text-slate-400">{g.last_audit_date}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                              {g.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= COMPLIANCE 3: NDCT RULES 2019 ================= */}
+          {tab === 'ndct' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                <KpiCard label="CDSCO Regulatory Form" val="Form CT-06 Cleared" sub="New Drugs & Clinical Trials Rules" color="text-cyan-400" />
+                <KpiCard label="Ethics Committee Reg." val="Form CT-02" sub="CDSCO Central Licensing Authority" color="text-emerald-400" />
+                <KpiCard label="Compensation Protocol" val="Rule 39 Mandate" sub="Independent Expert Committee" color="text-amber-400" />
+                <KpiCard label="Regulatory Jurisdiction" val="CDSCO (Govt of India)" sub="AYUSH Regulatory Cell" color="text-white" />
+              </div>
+
+              <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+                <h2 className="text-xs font-bold text-white">CDSCO Statutory Compliance Matrix (Table: compliance_ndct_rules)</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[11px] text-slate-300">
+                    <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2.5">NDCT Section</th>
+                        <th className="px-3 py-2.5">Form / Schedule</th>
+                        <th className="px-3 py-2.5">Statutory Clause Title</th>
+                        <th className="px-3 py-2.5">Regulatory Authority</th>
+                        <th className="px-3 py-2.5">Applicability Scope</th>
+                        <th className="px-3 py-2.5">Clearance Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {ndctList.map((n: any) => (
+                        <tr key={n.id} className="hover:bg-slate-800/40">
+                          <td className="px-3 py-2.5 font-bold font-mono text-cyan-400">{n.rule_section}</td>
+                          <td className="px-3 py-2.5 font-mono text-amber-300 font-bold">{n.form_type}</td>
+                          <td className="px-3 py-2.5 text-white font-medium">{n.clause_title}</td>
+                          <td className="px-3 py-2.5 text-slate-300">{n.regulatory_authority}</td>
+                          <td className="px-3 py-2.5 text-slate-400 max-w-xs">{n.applicability}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                              {n.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= COMPLIANCE 4: AUDIT & INSPECTION ================= */}
+          {tab === 'audit' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                <KpiCard label="Regulatory Inspections" val={`${auditList.length} Audits`} sub="CDSCO & Ayush QA Cell" color="text-cyan-400" />
+                <KpiCard label="Critical Findings" val="0 Observations" sub="100% Inspection Readiness" color="text-emerald-400" />
+                <KpiCard label="CAPA Resolution Rate" val="100% Resolved" sub="Corrective & Preventive Action" color="text-teal-400" />
+                <KpiCard label="Audit Readiness Score" val="99.4%" sub="Trial Master File Audited" color="text-white" />
+              </div>
+
+              <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+                <h2 className="text-xs font-bold text-white">Regulatory Inspections, Site Observations & CAPA Tracking (Table: compliance_audits)</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[11px] text-slate-300">
+                    <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2.5">Audit Code</th>
+                        <th className="px-3 py-2.5">Inspecting Body</th>
+                        <th className="px-3 py-2.5">Clinical Site Audited</th>
+                        <th className="px-3 py-2.5">Audit Scope</th>
+                        <th className="px-3 py-2.5">Inspection Date</th>
+                        <th className="px-3 py-2.5">Observations</th>
+                        <th className="px-3 py-2.5">CAPA Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {auditList.map((a: any) => (
+                        <tr key={a.id} className="hover:bg-slate-800/40">
+                          <td className="px-3 py-2.5 font-bold font-mono text-cyan-400">{a.audit_code}</td>
+                          <td className="px-3 py-2.5 text-white font-medium">{a.inspecting_body}</td>
+                          <td className="px-3 py-2.5 text-slate-300">{a.site_audited}</td>
+                          <td className="px-3 py-2.5 text-slate-200">{a.audit_type}</td>
+                          <td className="px-3 py-2.5 text-slate-400">{a.audit_date}</td>
+                          <td className="px-3 py-2.5 font-bold text-emerald-400">{a.findings_count} Observations</td>
+                          <td className="px-3 py-2.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                              {a.capa_status}
+                            </span>
                           </td>
                         </tr>
                       ))}
