@@ -35,8 +35,8 @@ export default function FullDashboardPage() {
   // Dark Mode State
   const [darkMode, setDarkMode] = useState(false);
 
-  // Live Clock State
-  const [currentDateTime, setCurrentDateTime] = useState<Date null |>(null);
+  // Live Clock State with proper TypeScript union
+  const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
 
   // Auth Guard: Check if user is logged in
   useEffect(() => {
@@ -128,16 +128,18 @@ export default function FullDashboardPage() {
     <div className={`flex h-screen w-screen overflow-hidden font-sans transition-colors duration-300 ${
       darkMode ? 'bg-[#0a0f18] text-slate-100' : 'bg-[#eef2f6] text-slate-800'
     }`}>
-      <Sidebar activeTab="{activeTab}" darkMode="{darkMode}" setActiveTab="{setActiveTab}"/>
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} darkMode={darkMode} />
 
       <div className={`flex-1 flex flex-col min-w-0 h-screen overflow-hidden transition-colors duration-300 ${
         darkMode ? 'bg-[#0a0f18]' : 'bg-[#eef2f6]'
       }`}>
-        <TopNav darkMode="{darkMode}" setDarkMode="{handleToggleDarkMode}"/>
+        <TopNav darkMode={darkMode} setDarkMode={handleToggleDarkMode} />
 
         <main className="flex-1 overflow-y-auto p-4 space-y-4">
           {activeTab !== 'dashboard' ? (
-            <ModuleViews onBack="{()" tab="{activeTab}"> setActiveTab('dashboard')}
+            <ModuleViews
+              tab={activeTab}
+              onBack={() => setActiveTab('dashboard')}
               studies={data?.studies || []}
               onOpenCreateStudy={() => setIsCreateStudyOpen(true)}
               onOpenAddPatient={() => setIsAddPatientOpen(true)}
@@ -200,12 +202,12 @@ export default function FullDashboardPage() {
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-9 space-y-4">
                   <div className="grid grid-cols-6 gap-2.5">
-                    <MetricCard "text-blue-400" "text-slate-900"} '5'} : ? ?? accent="border-t-blue-500" darkMode="{darkMode}" dotColor="bg-blue-400" sub="↑ 2 new this month" title="Total Studies" value="{data?.metrics?.totalStudies" valueColor="{darkMode"/>
-                    <MetricCard "text-emerald-400" "text-slate-900"} '985'} : ? ?? accent="border-t-emerald-500" darkMode="{darkMode}" dotColor="bg-emerald-400" sub="↑ 12% this month" title="Active Patients" value="{data?.metrics?.activePatients" valueColor="{darkMode"/>
-                    <MetricCard "text-purple-400" "text-slate-900"} '8'} : ? ?? accent="border-t-purple-500" darkMode="{darkMode}" dotColor="bg-purple-400" onClick="{()" sub="↑ 3 new this week" title="Safety Reports" value="{data?.metrics?.safetyReportsCount" valueColor="{darkMode"> setIsPVOpen(true)} />
-                    <MetricCard "text-amber-400" "text-slate-900"} '68%'} : ? ?? accent="border-t-amber-500" darkMode="{darkMode}" dotColor="bg-amber-400" sub="View Details →" title="Enrolment Rate" value="{data?.metrics?.enrolmentProgress" valueColor="{darkMode"/>
-                    <MetricCard "text-slate-900"} "text-teal-400" '96%'} : ? ?? accent="border-t-teal-500" darkMode="{darkMode}" dotColor="bg-teal-400" onClick="{()" sub="↑ 2% this month" title="Data Quality" value="{data?.metrics?.dataQuality" valueColor="{darkMode"> setIsDataQualityOpen(true)} />
-                    <MetricCard "text-rose-400" "text-slate-900"} '5'} : ? ?? accent="border-t-rose-500" darkMode="{darkMode}" dotColor="bg-rose-400" sub="View All →" title="Milestones" value="{data?.metrics?.upcomingMilestones" valueColor="{darkMode"/>
+                    <MetricCard title="Total Studies" value={data?.metrics?.totalStudies ?? '5'} sub="↑ 2 new this month" dotColor="bg-blue-400" valueColor={darkMode ? "text-blue-400" : "text-slate-900"} accent="border-t-blue-500" darkMode={darkMode} />
+                    <MetricCard title="Active Patients" value={data?.metrics?.activePatients ?? '985'} sub="↑ 12% this month" dotColor="bg-emerald-400" valueColor={darkMode ? "text-emerald-400" : "text-slate-900"} accent="border-t-emerald-500" darkMode={darkMode} />
+                    <MetricCard title="Safety Reports" value={data?.metrics?.safetyReportsCount ?? '8'} sub="↑ 3 new this week" dotColor="bg-purple-400" valueColor={darkMode ? "text-purple-400" : "text-slate-900"} accent="border-t-purple-500" darkMode={darkMode} onClick={() => setIsPVOpen(true)} />
+                    <MetricCard title="Enrolment Rate" value={data?.metrics?.enrolmentProgress ?? '68%'} sub="View Details →" dotColor="bg-amber-400" valueColor={darkMode ? "text-amber-400" : "text-slate-900"} accent="border-t-amber-500" darkMode={darkMode} />
+                    <MetricCard title="Data Quality" value={data?.metrics?.dataQuality ?? '96%'} sub="↑ 2% this month" dotColor="bg-teal-400" valueColor={darkMode ? "text-teal-400" : "text-slate-900"} accent="border-t-teal-500" darkMode={darkMode} onClick={() => setIsDataQualityOpen(true)} />
+                    <MetricCard title="Milestones" value={data?.metrics?.upcomingMilestones ?? '5'} sub="View All →" dotColor="bg-rose-400" valueColor={darkMode ? "text-rose-400" : "text-slate-900"} accent="border-t-rose-500" darkMode={darkMode} />
                   </div>
 
                   <div className="grid grid-cols-12 gap-4">
@@ -252,371 +254,7 @@ export default function FullDashboardPage() {
                           Study Status Breakdown
                         </span>
                         <button type="button" onClick={refreshData} title="Refresh Data" className="text-slate-400 hover:text-cyan-400 transition">
-                          <RotateCcw ${loading ''}`} 'animate-spin' : ? className="{`w-3.5" cursor-pointer h-3.5/>
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between py-2">
-                        <div className="relative w-28 h-28 flex items-center justify-center">
-                          <div className="w-28 h-28 rounded-full border-[12px] border-emerald-500 border-t-blue-500 border-r-amber-500 border-b-purple-500 shadow-md"></div>
-                          <div className="absolute text-center">
-                            <span className={`text-xl font-black leading-none ${darkMode ? 'text-white' : 'text-slate-900'}`}>{data?.metrics?.totalStudies ?? '5'}</span>
-                            <p className={`text-[9px] font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Total Studies</p>
-                          </div>
-                        </div>
-                        <div className="text-[11px] space-y-1.5 font-semibold">
-                          <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-1.5 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Planning</span><span>1</span></div>
-                          <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-1.5 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>Ongoing</span><span>3</span></div>
-                          <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-1.5 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-500"></span>On Hold</span><span>1</span></div>
-                          <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-1.5 text-purple-400"><span className="w-2 h-2 rounded-full bg-purple-500"></span>Completed</span><span>0</span></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-12 gap-4">
-                    <div className={`col-span-8 border rounded-xl p-3.5 shadow-md transition-colors duration-300 ${
-                      darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
-                    }`}>
-                      <div className="flex justify-between items-center mb-2.5">
-                        <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
-                          Active Clinical Studies (Neon DB Synced)
-                        </span>
-                        <button type="button" onClick={() => setIsCreateStudyOpen(true)} className="text-[10px] text-cyan-400 hover:text-cyan-300 font-extrabold cursor-pointer">
-                          + Add Protocol
-                        </button>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-[11px]">
-                          <thead className={`uppercase text-[9px] border-b ${
-                            darkMode ? 'bg-[#18273d] text-slate-300 font-bold border-slate-700/80' : 'bg-slate-100/80 text-slate-600 font-bold border-slate-200'
-                          }`}>
-                            <tr>
-                              <th className="px-2.5 py-2">Study ID</th>
-                              <th className="px-2.5 py-2">Title</th>
-                              <th className="px-2.5 py-2">Phase</th>
-                              <th className="px-2.5 py-2">Sites</th>
-                              <th className="px-2.5 py-2">Enrolment</th>
-                              <th className="px-2.5 py-2">Status</th>
-                              <th className="px-2.5 py-2">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className={`divide-y ${darkMode ? 'divide-slate-800 text-slate-200' : 'divide-slate-200/70 text-slate-800'}`}>
-                            {(data?.studies || []).map((row: any) => (
-                              <tr key={row.studyId} className={darkMode ? 'hover:bg-slate-800/60 transition' : 'hover:bg-slate-50 transition'}>
-                                <td className="px-2.5 py-2 font-bold text-cyan-400">{row.studyId}</td>
-                                <td className={`px-2.5 py-2 font-semibold max-w-[200px] truncate ${darkMode ? 'text-white' : 'text-slate-900'}`}>{row.title}</td>
-                                <td className="px-2.5 py-2 font-medium">{row.phase}</td>
-                                <td className="px-2.5 py-2 text-slate-400 font-medium">{row.sitesCount}</td>
-                                <td className="px-2.5 py-2 font-bold text-emerald-400">{`${row.enrolled} /${row.target}`}</td>
-                                <td className="px-2.5 py-2">
-                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                                    darkMode ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-emerald-100/80 border-emerald-300 text-emerald-800'
-                                  }`}>
-                                    {row.status}
-                                  </span>
-                                </td>
-                                <td className="px-2.5 py-2 text-cyan-400 font-bold cursor-pointer hover:underline">
-                                  View
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    <div className={`col-span-4 border rounded-xl p-3.5 flex flex-col justify-between shadow-md transition-colors duration-300 ${
-                      darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
-                    }`}>
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
-                            Safety Overview
-                          </span>
-                          <div className="flex gap-1 text-[10px]">
-                            <span className="bg-emerald-600 text-white font-bold px-2 py-0.5 rounded shadow-sm">ADR</span>
-                            <span className="text-slate-400 font-semibold px-2 py-0.5">SAE</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between py-2">
-                          <div className="relative w-20 h-20 flex items-center justify-center">
-                            <div className="w-20 h-20 rounded-full border-[8px] border-emerald-500 border-t-amber-400 border-r-rose-500 shadow-sm"></div>
-                            <div className="absolute text-center">
-                              <span className={`text-lg font-black leading-none ${darkMode ? 'text-white' : 'text-slate-900'}`}>{data?.metrics?.safetyReportsCount ?? '8'}</span>
-                              <p className={`text-[8px] font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Reports</p>
-                            </div>
-                          </div>
-
-                          <div className="text-[10px] space-y-1 font-semibold">
-                            <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>Mild</span><span>4</span></div>
-                            <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Moderate</span><span>2</span></div>
-                            <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1 text-rose-400"><span className="w-2 h-2 rounded-full bg-rose-500"></span>Serious</span><span>1</span></div>
-                            <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-500"></span>Pending</span><span>1</span></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => setIsPVOpen(true)}
-                        className={`w-full py-
-cat << 'EOF' > src/app/page.tsx
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/layout/Sidebar';
-import TopNav from '@/components/layout/TopNav';
-import {
-  Plus,
-  UserPlus,
-  AlertTriangle,
-  FileSpreadsheet,
-  Upload,
-  CheckCircle,
-  ChevronRight,
-  RotateCcw
-} from 'lucide-react';
-
-// Modals & Modules
-import CreateStudyModal from '@/components/CreateStudyModal';
-import AddPatientModal from '@/components/AddPatientModal';
-import ReportSafetyModal from '@/components/ReportSafetyModal';
-import ModuleViews from '@/components/ModuleViews';
-import UploadDataModal from '@/components/UploadDataModal';
-import DataQualityModal from '@/components/DataQualityModal';
-import PVDashboardModal from '@/components/PVDashboardModal';
-
-export default function FullDashboardPage() {
-  const router = useRouter();
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Active navigation tab
-  const [activeTab, setActiveTab] = useState('dashboard');
-
-  // Dark Mode State
-  const [darkMode, setDarkMode] = useState(false);
-
-  // Live Clock State
-  const [currentDateTime, setCurrentDateTime] = useState<Date null |>(null);
-
-  // Auth Guard: Check if user is logged in
-  useEffect(() => {
-    const authUser = localStorage.getItem('aiia_auth_user');
-    if (!authUser) {
-      router.push('/login');
-    }
-  }, [router]);
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('aiia-theme');
-    if (savedTheme === 'dark') {
-      setDarkMode(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-
-    setCurrentDateTime(new Date());
-    const intervalId = setInterval(() => {
-      setCurrentDateTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const handleToggleDarkMode = (val: boolean | ((prev: boolean) => boolean)) => {
-    setDarkMode((prev) => {
-      const nextVal = typeof val === 'function' ? val(prev) : val;
-      localStorage.setItem('aiia-theme', nextVal ? 'dark' : 'light');
-      if (nextVal) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      return nextVal;
-    });
-  };
-
-  const formattedDate = currentDateTime
-    ? currentDateTime.toLocaleDateString('en-GB', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      })
-    : 'Thu, 1 Oct 2026';
-
-  const formattedTime = currentDateTime
-    ? currentDateTime.toLocaleTimeString('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-      }) + ' IST'
-    : '00:00:00 IST';
-
-  // Modals
-  const [isCreateStudyOpen, setIsCreateStudyOpen] = useState(false);
-  const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
-  const [isReportSafetyOpen, setIsReportSafetyOpen] = useState(false);
-  const [isUploadDataOpen, setIsUploadDataOpen] = useState(false);
-  const [isDataQualityOpen, setIsDataQualityOpen] = useState(false);
-  const [isPVOpen, setIsPVOpen] = useState(false);
-
-  const refreshData = () => {
-    setLoading(true);
-    fetch('/api/dashboard')
-      .then((res) => res.json())
-      .then((json) => {
-        setData(json);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching dashboard data:', err);
-        setLoading(false);
-      });
-  };
-
-  useEffect(() => {
-    refreshData();
-  }, []);
-
-  const handleGenerateReport = () => {
-    window.open('/api/export-report', '_blank');
-  };
-
-  return (
-    <div className={`flex h-screen w-screen overflow-hidden font-sans transition-colors duration-300 ${
-      darkMode ? 'bg-[#0a0f18] text-slate-100' : 'bg-[#eef2f6] text-slate-800'
-    }`}>
-      <Sidebar activeTab="{activeTab}" darkMode="{darkMode}" setActiveTab="{setActiveTab}"/>
-
-      <div className={`flex-1 flex flex-col min-w-0 h-screen overflow-hidden transition-colors duration-300 ${
-        darkMode ? 'bg-[#0a0f18]' : 'bg-[#eef2f6]'
-      }`}>
-        <TopNav darkMode="{darkMode}" setDarkMode="{handleToggleDarkMode}"/>
-
-        <main className="flex-1 overflow-y-auto p-4 space-y-4">
-          {activeTab !== 'dashboard' ? (
-            <ModuleViews onBack="{()" tab="{activeTab}"> setActiveTab('dashboard')}
-              studies={data?.studies || []}
-              onOpenCreateStudy={() => setIsCreateStudyOpen(true)}
-              onOpenAddPatient={() => setIsAddPatientOpen(true)}
-              onOpenReportSafety={() => setIsReportSafetyOpen(true)}
-            />
-          ) : (
-            <>
-              {/* Welcome Banner */}
-              <div className={`rounded-xl p-4 flex justify-between items-center shadow-lg transition-all duration-300 border ${
-                darkMode
-                  ? 'bg-gradient-to-r from-[#111e33] via-[#132c45] to-[#0d1c2c] border-cyan-500/30 text-white shadow-cyan-950/40'
-                  : 'bg-gradient-to-r from-[#044e39] via-[#056349] to-[#0f766e] border-emerald-600/30 text-white shadow-emerald-950/20'
-              }`}>
-                <div className="flex items-center gap-3.5">
-                  <div className={`w-12 h-12 rounded-full overflow-hidden border-2 shadow-md flex-shrink-0 ${
-                    darkMode ? 'border-cyan-400 shadow-cyan-500/40 bg-slate-900' : 'border-emerald-300 bg-emerald-950'
-                  }`}>
-                    <img
-                      src="/doctor.jpg"
-                      alt="Dr. Aanchal Singh"
-                      className="w-full h-full object-cover object-top"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-base font-extrabold text-white tracking-tight">Welcome, Dr. Aanchal Singh</h1>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                        darkMode ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-emerald-400/20 text-emerald-200'
-                      }`}>
-                        Principal Investigator
-                      </span>
-                    </div>
-                    <p className={`text-xs font-semibold mt-0.5 ${darkMode ? 'text-slate-300' : 'text-emerald-100'}`}>
-                      All India Institute of Ayurveda (AIIA)
-                    </p>
-                    <p className={`text-[10px] mt-0.5 font-medium ${darkMode ? 'text-cyan-400' : 'text-emerald-200'}`}>
-                      Clinical Research • Pharmacovigilance • Global Health Impact
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-6">
-                  <div className={`text-right border-r pr-6 ${darkMode ? 'border-slate-700/80 text-slate-300' : 'border-emerald-500/50 text-emerald-100'}`}>
-                    <div className="text-[11px] font-bold tracking-wide">
-                      {formattedDate}
-                    </div>
-                    <div className={`text-sm font-black font-mono tracking-wider ${darkMode ? 'text-cyan-300' : 'text-white'}`}>
-                      {formattedTime}
-                    </div>
-                  </div>
-                  <div className="text-right space-y-0.5">
-                    <div className="text-xs font-bold text-amber-300 drop-shadow-sm">Traditional Wisdom</div>
-                    <div className={`text-xs font-bold drop-shadow-sm ${darkMode ? 'text-cyan-300' : 'text-emerald-200'}`}>Scientific Validation</div>
-                    <div className="text-xs font-bold text-white drop-shadow-sm">Global Impact</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 12-Col Grid */}
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-9 space-y-4">
-                  <div className="grid grid-cols-6 gap-2.5">
-                    <MetricCard "text-blue-400" "text-slate-900"} '5'} : ? ?? accent="border-t-blue-500" darkMode="{darkMode}" dotColor="bg-blue-400" sub="↑ 2 new this month" title="Total Studies" value="{data?.metrics?.totalStudies" valueColor="{darkMode"/>
-                    <MetricCard "text-emerald-400" "text-slate-900"} '985'} : ? ?? accent="border-t-emerald-500" darkMode="{darkMode}" dotColor="bg-emerald-400" sub="↑ 12% this month" title="Active Patients" value="{data?.metrics?.activePatients" valueColor="{darkMode"/>
-                    <MetricCard "text-purple-400" "text-slate-900"} '8'} : ? ?? accent="border-t-purple-500" darkMode="{darkMode}" dotColor="bg-purple-400" onClick="{()" sub="↑ 3 new this week" title="Safety Reports" value="{data?.metrics?.safetyReportsCount" valueColor="{darkMode"> setIsPVOpen(true)} />
-                    <MetricCard "text-amber-400" "text-slate-900"} '68%'} : ? ?? accent="border-t-amber-500" darkMode="{darkMode}" dotColor="bg-amber-400" sub="View Details →" title="Enrolment Rate" value="{data?.metrics?.enrolmentProgress" valueColor="{darkMode"/>
-                    <MetricCard "text-slate-900"} "text-teal-400" '96%'} : ? ?? accent="border-t-teal-500" darkMode="{darkMode}" dotColor="bg-teal-400" onClick="{()" sub="↑ 2% this month" title="Data Quality" value="{data?.metrics?.dataQuality" valueColor="{darkMode"> setIsDataQualityOpen(true)} />
-                    <MetricCard "text-rose-400" "text-slate-900"} '5'} : ? ?? accent="border-t-rose-500" darkMode="{darkMode}" dotColor="bg-rose-400" sub="View All →" title="Milestones" value="{data?.metrics?.upcomingMilestones" valueColor="{darkMode"/>
-                  </div>
-
-                  <div className="grid grid-cols-12 gap-4">
-                    <div className={`col-span-7 border rounded-xl p-3.5 shadow-md transition-colors duration-300 ${
-                      darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
-                    }`}>
-                      <div className="flex justify-between items-center mb-3">
-                        <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
-                          Study Enrolment Trend
-                        </span>
-                        <div className="flex items-center gap-3 text-[10px]">
-                          <span className={`flex items-center gap-1 font-semibold ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}><span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>Enrolled</span>
-                          <span className={`flex items-center gap-1 font-semibold ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}><span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>Screened</span>
-                          <span className={`flex items-center gap-1 font-semibold ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Target</span>
-                        </div>
-                      </div>
-                      <div className={`h-44 flex items-end justify-between gap-3 px-2 pt-4 border-b text-[10px] font-semibold ${
-                        darkMode ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'
-                      }`}>
-                        {[
-                          { m: 'Apr 2026', e: 35, s: 48 },
-                          { m: 'May 2026', e: 55, s: 68 },
-                          { m: 'Jun 2026', e: 70, s: 80 },
-                          { m: 'Jul 2026', e: 85, s: 92 },
-                          { m: 'Aug 2026', e: 94, s: 100 },
-                          { m: 'Sep 2026', e: 105, s: 112 },
-                        ].map((bar, i) => (
-                          <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
-                            <div className="w-full flex items-end justify-center gap-1.5 h-36">
-                              <div className="w-3.5 bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t shadow-sm" style={{ height: `${bar.e}%` }}></div>
-                              <div className="w-3.5 bg-gradient-to-t from-purple-600 to-purple-400 rounded-t shadow-sm" style={{ height: `${bar.s}%` }}></div>
-                            </div>
-                            <span className="text-[9px]">{bar.m}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className={`col-span-5 border rounded-xl p-3.5 flex flex-col justify-between shadow-md transition-colors duration-300 ${
-                      darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
-                    }`}>
-                      <div className="flex justify-between items-center">
-                        <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
-                          Study Status Breakdown
-                        </span>
-                        <button type="button" onClick={refreshData} title="Refresh Data" className="text-slate-400 hover:text-cyan-400 transition">
-                          <RotateCcw ${loading ''}`} 'animate-spin' : ? className="{`w-3.5" cursor-pointer h-3.5/>
+                          <RotateCcw className={`w-3.5 h-3.5 cursor-pointer ${loading ? 'animate-spin' : ''}`} />
                         </button>
                       </div>
                       <div className="flex items-center justify-between py-2">
@@ -743,12 +381,12 @@ export default function FullDashboardPage() {
                       Quick Actions
                     </span>
                     <div className="space-y-1.5 pt-1">
-                      <ActionButton icon="{Plus}" onClick="{()" primary title="Create New Study"> setIsCreateStudyOpen(true)} />
-                      <ActionButton darkMode="{darkMode}" icon="{UserPlus}" onClick="{()" title="Add Patient"> setIsAddPatientOpen(true)} />
-                      <ActionButton darkMode="{darkMode}" icon="{AlertTriangle}" onClick="{()" title="Report ADR/SAE"> setIsReportSafetyOpen(true)} />
-                      <ActionButton darkMode="{darkMode}" icon="{FileSpreadsheet}" onClick="{handleGenerateReport}" title="Generate Report"/>
-                      <ActionButton darkMode="{darkMode}" icon="{Upload}" onClick="{()" title="Upload Data"> setIsUploadDataOpen(true)} />
-                      <ActionButton darkMode="{darkMode}" icon="{CheckCircle}" onClick="{()" title="Check Data Quality"> setIsDataQualityOpen(true)} />
+                      <ActionButton title="Create New Study" icon={Plus} primary onClick={() => setIsCreateStudyOpen(true)} />
+                      <ActionButton title="Add Patient" icon={UserPlus} darkMode={darkMode} onClick={() => setIsAddPatientOpen(true)} />
+                      <ActionButton title="Report ADR/SAE" icon={AlertTriangle} darkMode={darkMode} onClick={() => setIsReportSafetyOpen(true)} />
+                      <ActionButton title="Generate Report" icon={FileSpreadsheet} darkMode={darkMode} onClick={handleGenerateReport} />
+                      <ActionButton title="Upload Data" icon={Upload} darkMode={darkMode} onClick={() => setIsUploadDataOpen(true)} />
+                      <ActionButton title="Check Data Quality" icon={CheckCircle} darkMode={darkMode} onClick={() => setIsDataQualityOpen(true)} />
                     </div>
                   </div>
 
@@ -762,10 +400,10 @@ export default function FullDashboardPage() {
                       <span onClick={() => alert('Regulatory deadlines monitored.')} className="text-[10px] text-cyan-400 font-extrabold cursor-pointer">View All →</span>
                     </div>
                     <div className="space-y-2 text-[11px]">
-                      <DeadlineItem darkMode="{darkMode}" date="25 Oct 2026" study="Study AIIA-CT-001" title="CTRI Update Due"/>
-                      <DeadlineItem darkMode="{darkMode}" date="28 Oct 2026" study="Study AIIA-CT-003" title="Ethics Approval Renewal"/>
-                      <DeadlineItem darkMode="{darkMode}" date="30 Oct 2026" study="Site - Chennai" title="Monitoring Visit"/>
-                      <DeadlineItem alert darkMode="{darkMode}" date="02 Nov 2026" study="Study AIIA-CT-002" title="SAE Reporting (7 days)"/>
+                      <DeadlineItem title="CTRI Update Due" study="Study AIIA-CT-001" date="25 Oct 2026" darkMode={darkMode} />
+                      <DeadlineItem title="Ethics Approval Renewal" study="Study AIIA-CT-003" date="28 Oct 2026" darkMode={darkMode} />
+                      <DeadlineItem title="Monitoring Visit" study="Site - Chennai" date="30 Oct 2026" darkMode={darkMode} />
+                      <DeadlineItem title="SAE Reporting (7 days)" study="Study AIIA-CT-002" date="02 Nov 2026" alert darkMode={darkMode} />
                     </div>
                   </div>
 
@@ -797,12 +435,12 @@ export default function FullDashboardPage() {
       </div>
 
       {/* Modals */}
-      <CreateStudyModal isOpen="{isCreateStudyOpen}" onClose="{()"> setIsCreateStudyOpen(false)} onSuccess={refreshData} />
-      <AddPatientModal []).map((s: isOpen="{isAddPatientOpen}" studies="{(data?.studies" ||> ({ studyCode: s.studyId || s.studyCode, title: s.title }))} onClose={() => setIsAddPatientOpen(false)} onSuccess={refreshData} />
-      <ReportSafetyModal []).map((s: isOpen="{isReportSafetyOpen}" studies="{(data?.studies" ||> ({ studyCode: s.studyId || s.studyCode, title: s.title }))} onClose={() => setIsReportSafetyOpen(false)} onSuccess={refreshData} />
-      <UploadDataModal isOpen="{isUploadDataOpen}" onClose="{()"> setIsUploadDataOpen(false)} onSuccess={refreshData} />
-      <DataQualityModal isOpen="{isDataQualityOpen}" onClose="{()"> setIsDataQualityOpen(false)} />
-      <PVDashboardModal isOpen="{isPVOpen}" onClose="{()" safety="{data?.safety}"> setIsPVOpen(false)} />
+      <CreateStudyModal isOpen={isCreateStudyOpen} onClose={() => setIsCreateStudyOpen(false)} onSuccess={refreshData} />
+      <AddPatientModal isOpen={isAddPatientOpen} studies={(data?.studies || []).map((s: any) => ({ studyCode: s.studyId || s.studyCode, title: s.title }))} onClose={() => setIsAddPatientOpen(false)} onSuccess={refreshData} />
+      <ReportSafetyModal isOpen={isReportSafetyOpen} studies={(data?.studies || []).map((s: any) => ({ studyCode: s.studyId || s.studyCode, title: s.title }))} onClose={() => setIsReportSafetyOpen(false)} onSuccess={refreshData} />
+      <UploadDataModal isOpen={isUploadDataOpen} onClose={() => setIsUploadDataOpen(false)} onSuccess={refreshData} />
+      <DataQualityModal isOpen={isDataQualityOpen} onClose={() => setIsDataQualityOpen(false)} />
+      <PVDashboardModal isOpen={isPVOpen} safety={data?.safety} onClose={() => setIsPVOpen(false)} />
     </div>
   );
 }
@@ -841,10 +479,10 @@ function ActionButton({ title, icon: Icon, primary, darkMode, onClick }: any) {
       }`}
     >
       <div className="flex items-center gap-2 pointer-events-none">
-        <Icon ${primary 'text-cyan-400' 'text-emerald-700'}`} 'text-white' : ? className="{`w-3.5" darkMode h-3.5/>
+        <Icon className={`w-3.5 h-3.5 ${primary ? 'text-white' : darkMode ? 'text-cyan-400' : 'text-emerald-700'}`} />
         <span>{title}</span>
       </div>
-      <ChevronRight className="w-3.5 h-3.5 text-slate-400 pointer-events-none"/>
+      <ChevronRight className="w-3.5 h-3.5 text-slate-400 pointer-events-none" />
     </button>
   );
 }
