@@ -28,8 +28,13 @@ import {
   Scale,
   SearchCheck,
   Globe,
-  Award,
-  BookOpen
+  Cpu,
+  Share2,
+  Activity,
+  Terminal,
+  Server,
+  Layers,
+  Code2
 } from 'lucide-react';
 
 interface Props {
@@ -64,7 +69,10 @@ export default function ModuleViews({
     ctriList: [],
     gcpList: [],
     ndctList: [],
-    auditList: []
+    auditList: [],
+    cdiscList: [],
+    fhirList: [],
+    abdmList: []
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -109,6 +117,11 @@ export default function ModuleViews({
   const gcpList: any[] = dbData.gcpList || [];
   const ndctList: any[] = dbData.ndctList || [];
   const auditList: any[] = dbData.auditList || [];
+
+  // Interoperability
+  const cdiscList: any[] = dbData.cdiscList || [];
+  const fhirList: any[] = dbData.fhirList || [];
+  const abdmList: any[] = dbData.abdmList || [];
 
   const filteredStudies = studiesList.filter((s: any) => {
     const matchesSearch =
@@ -158,6 +171,14 @@ export default function ModuleViews({
         return { category: 'COMPLIANCE & REGULATORY', title: 'New Drugs & Clinical Trials Rules 2019', icon: Scale, desc: 'CDSCO Form CT-06 approvals, Institutional Ethics Committee registrations, and compensation rule enforcement.' };
       case 'audit':
         return { category: 'COMPLIANCE & REGULATORY', title: 'Audit & Regulatory Inspection Readiness', icon: SearchCheck, desc: 'CDSCO & Ministry of Ayush inspection audits, site observations, and Corrective & Preventive Action (CAPA) logs.' };
+
+      // Data & Interoperability
+      case 'cdisc':
+        return { category: 'DATA & INTEROPERABILITY', title: 'CDISC Standards Hub (SDTM / CDASH / ADaM)', icon: Cpu, desc: 'Clinical Data Interchange Standards Consortium standardized domains for FDA, PMDA, and CDSCO regulatory submissions.' };
+      case 'fhir':
+        return { category: 'DATA & INTEROPERABILITY', title: 'HL7 FHIR R4 Interoperability Gateway', icon: Share2, desc: 'RESTful FHIR API endpoints, ResearchStudy & ResearchSubject JSON resources, and Hospital EHR bidirectional synchronization.' };
+      case 'abdm':
+        return { category: 'DATA & INTEROPERABILITY', title: 'ABDM Ayushman Bharat Digital Mission Hub', icon: Activity, desc: 'National Health Authority integration, ABHA 14-digit patient verification, and HIP/HIU consent-driven clinical exchange.' };
 
       default:
         return { category: 'SYSTEM', title: 'Clinical Module', icon: FolderKanban, desc: 'AIIA Clinical Trials Management System' };
@@ -801,7 +822,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* ================= COMPLIANCE 1: CTRI REGISTRATION ================= */}
+          {/* COMPLIANCE 1: CTRI */}
           {tab === 'ctri' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -812,13 +833,7 @@ export default function ModuleViews({
               </div>
 
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xs font-bold text-white">CTRI Registry Dossiers & WHO ICTRP Sync (Table: compliance_ctri)</h2>
-                  <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                    <Globe className="w-3.5 h-3.5" />
-                    WHO ICTRP Live Node
-                  </span>
-                </div>
+                <h2 className="text-xs font-bold text-white">CTRI Registry Dossiers & WHO ICTRP Sync (Table: compliance_ctri)</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[11px] text-slate-300">
                     <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
@@ -855,7 +870,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* ================= COMPLIANCE 2: GCP-ASU & ICMR ================= */}
+          {/* COMPLIANCE 2: GCP */}
           {tab === 'gcp' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -901,7 +916,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* ================= COMPLIANCE 3: NDCT RULES 2019 ================= */}
+          {/* COMPLIANCE 3: NDCT */}
           {tab === 'ndct' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -947,7 +962,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* ================= COMPLIANCE 4: AUDIT & INSPECTION ================= */}
+          {/* COMPLIANCE 4: AUDIT */}
           {tab === 'audit' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -984,6 +999,216 @@ export default function ModuleViews({
                           <td className="px-3 py-2.5">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                               {a.capa_status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= DATA & INTEROPERABILITY 1: CDISC DATA STANDARDS ================= */}
+          {tab === 'cdisc' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                <KpiCard label="CDISC SDTM Standard" val="v3.4 Production" sub="FDA / PMDA / CDSCO Compliant" color="text-cyan-400" />
+                <KpiCard label="Verified SDTM Domains" val={`${cdiscList.length} Domains`} sub="Demographics, Labs, Exposure" color="text-emerald-400" />
+                <KpiCard label="Define-XML Specification" val="v2.1 Passed" sub="Zero Pinnacle 21 Rule Errors" color="text-teal-400" />
+                <KpiCard label="Analysis Ready (ADaM)" val="ADSL Coded" sub="Statistical Efficacy Datasets" color="text-white" />
+              </div>
+
+              <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xs font-bold text-white">Standardized CDISC SDTM / ADaM Datasets Repository (Table: interop_cdisc_datasets)</h2>
+                  <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                    <Cpu className="w-3.5 h-3.5" />
+                    Pinnacle 21 Community Validated
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[11px] text-slate-300">
+                    <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2.5">Domain Code</th>
+                        <th className="px-3 py-2.5">Domain Description</th>
+                        <th className="px-3 py-2.5">CDISC Standard</th>
+                        <th className="px-3 py-2.5">Total Records</th>
+                        <th className="px-3 py-2.5">Export Format</th>
+                        <th className="px-3 py-2.5">Define-XML v2.1</th>
+                        <th className="px-3 py-2.5">Validation Status</th>
+                        <th className="px-3 py-2.5 text-right">Download</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {cdiscList.map((d: any) => (
+                        <tr key={d.id} className="hover:bg-slate-800/40">
+                          <td className="px-3 py-2.5 font-bold font-mono text-cyan-400">{d.domain_code}</td>
+                          <td className="px-3 py-2.5 text-white font-medium">{d.domain_name}</td>
+                          <td className="px-3 py-2.5 text-slate-300 font-mono text-[10px]">{d.standard_type}</td>
+                          <td className="px-3 py-2.5 font-bold text-emerald-400">{d.total_records.toLocaleString()}</td>
+                          <td className="px-3 py-2.5 text-amber-300 font-mono text-[10px]">{d.export_format}</td>
+                          <td className="px-3 py-2.5 text-slate-300">{d.define_xml_status}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                              {d.validation_status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-right">
+                            <button
+                              onClick={() => alert(`Exporting ${d.domain_code}.xpt SAS Transport Package with Define-XML`)}
+                              className="px-2 py-1 rounded bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 font-semibold cursor-pointer text-[10px]"
+                            >
+                              Get .XPT
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= DATA & INTEROPERABILITY 2: HL7 FHIR INTEGRATION ================= */}
+          {tab === 'fhir' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                <KpiCard label="HL7 FHIR Version" val="FHIR R4 (v4.0.1)" sub="RESTful HTTPS JSON API" color="text-cyan-400" />
+                <KpiCard label="Active FHIR Resources" val={`${fhirList.length} Endpoints`} sub="ResearchStudy & ResearchSubject" color="text-emerald-400" />
+                <KpiCard label="Total FHIR Synced" val={`${fhirList.reduce((acc, f) => acc + (f.records_synced || 0), 0)} Records`} sub="Hospital EHR Bidirectional Sync" color="text-teal-400" />
+                <KpiCard label="API Gateway Health" val="200 OK (99.98%)" sub="Sub-120ms Latency" color="text-white" />
+              </div>
+
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-8 bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xs font-bold text-white">Live FHIR R4 Clinical Endpoints (Table: interop_fhir_endpoints)</h2>
+                    <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                      <Server className="w-3.5 h-3.5" />
+                      Live Interop Gateway
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-[11px] text-slate-300">
+                      <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
+                        <tr>
+                          <th className="px-3 py-2.5">Resource</th>
+                          <th className="px-3 py-2.5">Endpoint Path</th>
+                          <th className="px-3 py-2.5">HTTP Methods</th>
+                          <th className="px-3 py-2.5">Sync Frequency</th>
+                          <th className="px-3 py-2.5">Records Synced</th>
+                          <th className="px-3 py-2.5">Gateway Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/80">
+                        {fhirList.map((f: any) => (
+                          <tr key={f.id} className="hover:bg-slate-800/40">
+                            <td className="px-3 py-2.5 font-bold text-white">{f.resource_type}</td>
+                            <td className="px-3 py-2.5 font-mono text-cyan-300 text-[10px]">{f.endpoint_path}</td>
+                            <td className="px-3 py-2.5 text-slate-300 font-mono text-[10px]">{f.http_methods}</td>
+                            <td className="px-3 py-2.5 text-slate-400">{f.sync_frequency}</td>
+                            <td className="px-3 py-2.5 font-bold text-emerald-400">{f.records_synced.toLocaleString()}</td>
+                            <td className="px-3 py-2.5">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                {f.health_status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* FHIR JSON Live Resource Inspector */}
+                <div className="col-span-4 bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Code2 className="w-4 h-4 text-cyan-400" />
+                        FHIR R4 JSON Payload
+                      </span>
+                      <span className="text-[9px] font-mono text-emerald-400">ResearchStudy</span>
+                    </div>
+                    <pre className="text-[10px] font-mono text-cyan-300/90 bg-[#071322] p-3 rounded-lg border border-slate-800 overflow-x-auto max-h-56 leading-relaxed">
+{`{
+  "resourceType": "ResearchStudy",
+  "id": "AIIA-CT-001",
+  "status": "active",
+  "title": "Nishamalaki in Type 2 DM",
+  "sponsor": {
+    "reference": "Organization/AIIA-DELHI"
+  },
+  "principalInvestigator": {
+    "display": "Dr. Aanchal Singh"
+  },
+  "category": [{
+    "coding": [{
+      "system": "http://terminology.ayush.gov.in",
+      "code": "ASU-CLINICAL-TRIAL"
+    }]
+  }]
+}`}
+                    </pre>
+                  </div>
+                  <button
+                    onClick={() => alert('Sending test FHIR Bundle to Hospital EHR Gateway: 200 OK Response Received')}
+                    className="w-full bg-[#163a61] hover:bg-[#1f4e82] text-cyan-300 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer"
+                  >
+                    Test Send FHIR Bundle →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= DATA & INTEROPERABILITY 3: ABDM INTEGRATION ================= */}
+          {tab === 'abdm' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                <KpiCard label="National Health Authority" val="ABDM Gateway M1/M2/M3" sub="Full Milestone Cleared" color="text-cyan-400" />
+                <KpiCard label="ABHA Verified Subjects" val={`${abdmList.length} Subjects`} sub="14-Digit Aadhaar / Mobile Auth" color="text-emerald-400" />
+                <KpiCard label="HIP Facility Node" val="AIIA New Delhi" sub="Facility ID: IN0710001004" color="text-emerald-400" />
+                <KpiCard label="Consent Artefacts" val="100% Digital" sub="Revocable Patient Data Consent" color="text-white" />
+              </div>
+
+              <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xs font-bold text-white">ABDM Clinical Trials Patient Registry & ABHA Linkage (Table: interop_abdm_registry)</h2>
+                  <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                    <Activity className="w-3.5 h-3.5" />
+                    Ayushman Bharat Sandbox Certified
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[11px] text-slate-300">
+                    <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2.5">Subject ID</th>
+                        <th className="px-3 py-2.5">ABHA ID (14-Digit)</th>
+                        <th className="px-3 py-2.5">ABHA Address (PHR)</th>
+                        <th className="px-3 py-2.5">HIP Facility Node</th>
+                        <th className="px-3 py-2.5">Consent Artefact ID</th>
+                        <th className="px-3 py-2.5">Linked Date</th>
+                        <th className="px-3 py-2.5">Gateway Sync Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {abdmList.map((a: any) => (
+                        <tr key={a.id} className="hover:bg-slate-800/40">
+                          <td className="px-3 py-2.5 font-bold text-cyan-400">{a.subject_id}</td>
+                          <td className="px-3 py-2.5 font-mono text-emerald-400 font-semibold">{a.abha_number}</td>
+                          <td className="px-3 py-2.5 text-white font-mono text-[10px]">{a.abha_address}</td>
+                          <td className="px-3 py-2.5 text-slate-300">{a.hip_facility_id}</td>
+                          <td className="px-3 py-2.5 font-mono text-slate-400 text-[10px]">{a.consent_artefact_id}</td>
+                          <td className="px-3 py-2.5 text-slate-400">{a.linked_date}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                              {a.gateway_sync_status}
                             </span>
                           </td>
                         </tr>

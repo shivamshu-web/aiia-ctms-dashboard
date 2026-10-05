@@ -158,7 +158,7 @@ async function initSchema(client: any) {
       submission_status VARCHAR(50) DEFAULT 'Approved by NPvCC'
     );
 
-    -- 13. COMPLIANCE: CTRI Registrations
+    -- 13. Compliance: CTRI
     CREATE TABLE IF NOT EXISTS compliance_ctri (
       id SERIAL PRIMARY KEY,
       study_id VARCHAR(50) NOT NULL,
@@ -171,7 +171,7 @@ async function initSchema(client: any) {
       verification_status VARCHAR(50) DEFAULT 'CTRI Verified'
     );
 
-    -- 14. COMPLIANCE: GCP-ASU & ICMR Standards
+    -- 14. Compliance: GCP & ICMR
     CREATE TABLE IF NOT EXISTS compliance_gcp_icmr (
       id SERIAL PRIMARY KEY,
       rule_domain TEXT NOT NULL,
@@ -182,7 +182,7 @@ async function initSchema(client: any) {
       status VARCHAR(50) DEFAULT 'Fully Compliant'
     );
 
-    -- 15. COMPLIANCE: NDCT Rules 2019
+    -- 15. Compliance: NDCT Rules
     CREATE TABLE IF NOT EXISTS compliance_ndct_rules (
       id SERIAL PRIMARY KEY,
       rule_section VARCHAR(50) NOT NULL,
@@ -193,7 +193,7 @@ async function initSchema(client: any) {
       status VARCHAR(50) DEFAULT 'Statutory Approved'
     );
 
-    -- 16. COMPLIANCE: Audits & Inspections
+    -- 16. Compliance: Audits
     CREATE TABLE IF NOT EXISTS compliance_audits (
       id SERIAL PRIMARY KEY,
       audit_code VARCHAR(50) UNIQUE NOT NULL,
@@ -203,6 +203,42 @@ async function initSchema(client: any) {
       audit_date DATE NOT NULL,
       findings_count INT DEFAULT 0,
       capa_status VARCHAR(50) DEFAULT 'CAPA Closed'
+    );
+
+    -- 17. INTEROPERABILITY: CDISC Datasets
+    CREATE TABLE IF NOT EXISTS interop_cdisc_datasets (
+      id SERIAL PRIMARY KEY,
+      domain_code VARCHAR(20) NOT NULL,
+      domain_name TEXT NOT NULL,
+      standard_type VARCHAR(30) DEFAULT 'SDTM v3.4',
+      total_records INT NOT NULL,
+      validation_status VARCHAR(50) DEFAULT '100% CDISC Compliant',
+      export_format VARCHAR(30) DEFAULT 'SAS Transport (XPT)',
+      define_xml_status VARCHAR(50) DEFAULT 'Define-XML v2.1 Verified'
+    );
+
+    -- 18. INTEROPERABILITY: HL7 FHIR Endpoints
+    CREATE TABLE IF NOT EXISTS interop_fhir_endpoints (
+      id SERIAL PRIMARY KEY,
+      resource_type VARCHAR(50) NOT NULL,
+      endpoint_path TEXT NOT NULL,
+      fhir_version VARCHAR(20) DEFAULT 'R4 (v4.0.1)',
+      http_methods VARCHAR(50) DEFAULT 'GET, POST, PUT',
+      sync_frequency VARCHAR(50) DEFAULT 'Real-Time Webhook',
+      records_synced INT NOT NULL,
+      health_status VARCHAR(50) DEFAULT 'Connected (200 OK)'
+    );
+
+    -- 19. INTEROPERABILITY: ABDM Network Registry
+    CREATE TABLE IF NOT EXISTS interop_abdm_registry (
+      id SERIAL PRIMARY KEY,
+      subject_id VARCHAR(50) NOT NULL,
+      abha_number VARCHAR(50) NOT NULL,
+      abha_address VARCHAR(100) NOT NULL,
+      hip_facility_id VARCHAR(50) DEFAULT 'IN0710001004 (AIIA New Delhi)',
+      consent_artefact_id VARCHAR(100) NOT NULL,
+      gateway_sync_status VARCHAR(50) DEFAULT 'ABDM Gateway Synced',
+      linked_date DATE DEFAULT CURRENT_DATE
     );
   `);
 
@@ -264,7 +300,6 @@ async function initSchema(client: any) {
       ('PSUR-2026-H2', 'Periodic Safety Update Report: Rasayana Oncology Adjuvant', '01 Apr 2026 - 30 Sep 2026', 248, 8, 'Favourable Benefit-Risk', 'Submitted to CDSCO'),
       ('PBRER-2026-Q3', 'Periodic Benefit-Risk Evaluation Report: Ashwagandha Extract', '01 Jul 2026 - 30 Sep 2026', 196, 5, 'Acceptable Safety Margin', 'Approved by NPvCC');
 
-      -- SEED COMPLIANCE & REGULATORY
       INSERT INTO compliance_ctri (study_id, ctri_reg_no, who_ictrp_synced, reg_date, next_annual_update_due, primary_sponsor, recruitment_status, verification_status) VALUES
       ('AIIA-CT-001', 'CTRI/2025/03/048912', 'Yes (Live)', '2025-03-14', '2027-03-14', 'All India Institute of Ayurveda, New Delhi', 'Open to Recruitment', 'CTRI Verified'),
       ('AIIA-CT-002', 'CTRI/2025/08/059124', 'Yes (Live)', '2025-08-02', '2027-08-02', 'Ministry of Ayush / AIIA Research Fund', 'Open to Recruitment', 'CTRI Verified'),
@@ -288,6 +323,27 @@ async function initSchema(client: any) {
       ('AUD-2026-01', 'CDSCO North Zone Inspectorate', 'AIIA Apex Centre, New Delhi', 'Routine GCP Regulatory Inspection', '2026-08-10', 0, 'No Observations (Clear)'),
       ('AUD-2026-02', 'Ministry of Ayush Quality Assurance Cell', 'NIA Hospital, Jaipur', 'AYUSH GCP Protocol Adherence Audit', '2026-09-04', 1, 'CAPA Verified & Closed'),
       ('AUD-2026-03', 'Independent Quality Auditor (Third-Party)', 'IMS BHU Varanasi Site', 'Trial Master File (TMF) & eCRF Audit', '2026-09-18', 2, 'CAPA Under Implementation');
+
+      -- SEED DATA & INTEROPERABILITY
+      INSERT INTO interop_cdisc_datasets (domain_code, domain_name, standard_type, total_records, validation_status, export_format, define_xml_status) VALUES
+      ('DM', 'Demographics & Prakriti Profile', 'SDTM v3.4', 1085, '100% CDISC Compliant', 'SAS Transport (XPT v5)', 'Define-XML v2.1 Passed'),
+      ('AE', 'Adverse Events & ADR Matrix', 'SDTM v3.4', 38, '100% CDISC Compliant', 'SAS Transport (XPT v5)', 'Define-XML v2.1 Passed'),
+      ('LB', 'Laboratory Biomarkers (AyurBio)', 'SDTM v3.4', 4210, '99.8% Compliant', 'SAS Transport (XPT v5)', 'Define-XML v2.1 Passed'),
+      ('EX', 'Exposure to Investigational Herbal Drug', 'SDTM v3.4', 2140, '100% CDISC Compliant', 'SAS Transport (XPT v5)', 'Define-XML v2.1 Passed'),
+      ('ADSL', 'Subject-Level Analysis Dataset', 'ADaM v1.3', 1085, '100% Validated', 'SAS Transport (XPT v5)', 'Analysis Ready');
+
+      INSERT INTO interop_fhir_endpoints (resource_type, endpoint_path, fhir_version, http_methods, sync_frequency, records_synced, health_status) VALUES
+      ('ResearchStudy', '/fhir/R4/ResearchStudy', 'R4 (v4.0.1)', 'GET, POST', 'Continuous Webhook', 5, 'Connected (200 OK)'),
+      ('ResearchSubject', '/fhir/R4/ResearchSubject', 'R4 (v4.0.1)', 'GET, POST, PUT', 'Continuous Webhook', 985, 'Connected (200 OK)'),
+      ('Observation', '/fhir/R4/Observation?category=laboratory', 'R4 (v4.0.1)', 'GET, POST', 'Batch Sync (Hourly)', 4210, 'Connected (200 OK)'),
+      ('Condition', '/fhir/R4/Condition?code=ICD-11', 'R4 (v4.0.1)', 'GET', 'Real-time', 1240, 'Connected (200 OK)');
+
+      INSERT INTO interop_abdm_registry (subject_id, abha_number, abha_address, hip_facility_id, consent_artefact_id, gateway_sync_status, linked_date) VALUES
+      ('SUBJ-AIIA-0101', '91-4821-3940-1284', 'patient0101@sbx', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90412', 'ABDM Gateway Synced', '2026-05-12'),
+      ('SUBJ-AIIA-0102', '91-2391-4890-5912', 'rajesh.sharma@abdm', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90413', 'ABDM Gateway Synced', '2026-05-24'),
+      ('SUBJ-AIIA-0205', '91-8841-0294-8192', 'meena.gupta@abdm', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90414', 'ABDM Gateway Synced', '2026-06-03'),
+      ('SUBJ-AIIA-0310', '91-5519-3910-4819', 'sunil.kumar@sbx', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90415', 'ABDM Gateway Synced', '2026-07-15'),
+      ('SUBJ-AIIA-0402', '91-9923-4819-2041', 'anita.devi@abdm', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90416', 'ABDM Gateway Synced', '2026-08-02');
     `);
   }
 }
@@ -363,7 +419,7 @@ export async function GET(req: Request) {
         data.periodicReports = res.rows;
       }
 
-      // COMPLIANCE & REGULATORY
+      // COMPLIANCE
       if (tab === 'ctri' || tab === 'all') {
         const res = await client.query('SELECT * FROM compliance_ctri ORDER BY id ASC');
         data.ctriList = res.rows;
@@ -379,6 +435,20 @@ export async function GET(req: Request) {
       if (tab === 'audit' || tab === 'all') {
         const res = await client.query('SELECT * FROM compliance_audits ORDER BY id ASC');
         data.auditList = res.rows;
+      }
+
+      // DATA & INTEROPERABILITY
+      if (tab === 'cdisc' || tab === 'all') {
+        const res = await client.query('SELECT * FROM interop_cdisc_datasets ORDER BY id ASC');
+        data.cdiscList = res.rows;
+      }
+      if (tab === 'fhir' || tab === 'all') {
+        const res = await client.query('SELECT * FROM interop_fhir_endpoints ORDER BY id ASC');
+        data.fhirList = res.rows;
+      }
+      if (tab === 'abdm' || tab === 'all') {
+        const res = await client.query('SELECT * FROM interop_abdm_registry ORDER BY id ASC');
+        data.abdmList = res.rows;
       }
 
       return NextResponse.json({ success: true, source: 'neon_postgres', data });
