@@ -64,7 +64,7 @@ async function initSchema(client: any) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- 5. REAL Monitoring Visits Logs
+    -- 5. Monitoring Logs
     CREATE TABLE IF NOT EXISTS cra_monitoring_logs (
       id SERIAL PRIMARY KEY,
       study_id VARCHAR(50) NOT NULL,
@@ -76,7 +76,7 @@ async function initSchema(client: any) {
       mvr_status VARCHAR(50) DEFAULT 'Approved & Signed'
     );
 
-    -- 6. REAL eCRF Data Queries
+    -- 6. eCRF Queries
     CREATE TABLE IF NOT EXISTS ecrf_data_queries (
       id SERIAL PRIMARY KEY,
       query_id VARCHAR(50) UNIQUE NOT NULL,
@@ -88,7 +88,7 @@ async function initSchema(client: any) {
       status VARCHAR(50) DEFAULT 'Resolved'
     );
 
-    -- 7. REAL Study Milestones
+    -- 7. Milestones
     CREATE TABLE IF NOT EXISTS study_milestones (
       id SERIAL PRIMARY KEY,
       study_id VARCHAR(50) NOT NULL,
@@ -99,16 +99,66 @@ async function initSchema(client: any) {
       target_lpo_date VARCHAR(50)
     );
 
-    -- 8. REAL Close-Out Workflow Checklist
+    -- 8. Closeout Checklist
     CREATE TABLE IF NOT EXISTS trial_closeout_checklist (
       id SERIAL PRIMARY KEY,
       step_name TEXT NOT NULL,
       status VARCHAR(50) NOT NULL,
       audit_details TEXT
     );
+
+    -- 9. PV: ADR / SAE Reports (NPvCC)
+    CREATE TABLE IF NOT EXISTS pv_safety_reports (
+      id SERIAL PRIMARY KEY,
+      report_id VARCHAR(50) UNIQUE NOT NULL,
+      study_id VARCHAR(50) NOT NULL,
+      subject_id VARCHAR(50) NOT NULL,
+      suspected_herb TEXT NOT NULL,
+      adverse_event TEXT NOT NULL,
+      severity VARCHAR(30) NOT NULL,
+      causality_score VARCHAR(50) DEFAULT 'Probable / Likely',
+      reported_date DATE DEFAULT CURRENT_DATE,
+      regulatory_deadline VARCHAR(50) DEFAULT '7 Days (Expedited)',
+      status VARCHAR(50) DEFAULT 'Submitted to CDSCO'
+    );
+
+    -- 10. PV: Safety Signals
+    CREATE TABLE IF NOT EXISTS pv_safety_signals (
+      id SERIAL PRIMARY KEY,
+      signal_id VARCHAR(50) UNIQUE NOT NULL,
+      formulation_name TEXT NOT NULL,
+      adverse_event_term TEXT NOT NULL,
+      prr_score NUMERIC(5,2) NOT NULL,
+      ror_score NUMERIC(5,2) NOT NULL,
+      case_count INT NOT NULL,
+      signal_status VARCHAR(50) DEFAULT 'Validated',
+      action_taken TEXT
+    );
+
+    -- 11. PV: MedDRA / WHODrug Dictionary Mapping
+    CREATE TABLE IF NOT EXISTS pv_meddra_whodrug (
+      id SERIAL PRIMARY KEY,
+      soc_term TEXT NOT NULL,
+      pt_term TEXT NOT NULL,
+      meddra_code VARCHAR(50) NOT NULL,
+      asu_botanical_name TEXT NOT NULL,
+      whodrug_id VARCHAR(50) NOT NULL,
+      active_phytochemical TEXT NOT NULL
+    );
+
+    -- 12. PV: Periodic Safety Reports (PSUR/PBRER)
+    CREATE TABLE IF NOT EXISTS pv_periodic_reports (
+      id SERIAL PRIMARY KEY,
+      report_code VARCHAR(50) UNIQUE NOT NULL,
+      title TEXT NOT NULL,
+      reporting_period VARCHAR(100) NOT NULL,
+      total_exposure_subjects INT NOT NULL,
+      total_ae_recorded INT NOT NULL,
+      benefit_risk_conclusion VARCHAR(100) DEFAULT 'Favourable Benefit-Risk',
+      submission_status VARCHAR(50) DEFAULT 'Approved by NPvCC'
+    );
   `);
 
-  // Initial Seed for fresh Neon databases
   const count = await client.query('SELECT count(*) FROM clinical_studies');
   if (parseInt(count.rows[0].count, 10) === 0) {
     await client.query(`
@@ -144,6 +194,29 @@ async function initSchema(client: any) {
       ('3. Investigational Ayurvedic Medicine Reconciliation', 'Completed', 'Pharmacy logs, dispensed bottles, returned packets, and destruction certificates fully accounted.'),
       ('4. Site Close-Out Visits (COV) & Investigator Signatures', 'In Progress (90%)', 'AIIA New Delhi and NIA Jaipur COV visits completed. BHU close-out scheduled for next week.'),
       ('5. Clinical Study Report (CSR) & CTRI Result Disclosure', 'Draft Ready', 'ICH E3 structured CSR drafting underway for submission to Ministry of Ayush.');
+
+      -- SEED PHARMACOVIGILANCE
+      INSERT INTO pv_safety_reports (report_id, study_id, subject_id, suspected_herb, adverse_event, severity, causality_score, reported_date, regulatory_deadline, status) VALUES
+      ('PV-AIIA-2026-001', 'AIIA-CT-001', 'SUBJ-AIIA-0104', 'Nishamalaki Vati (Amalaki component)', 'Transient Mild Gastric Hyperacidity (Amlapitta)', 'Mild', 'Probable (WHO-UMC)', '2026-09-24', '15 Days Routine', 'Submitted to CDSCO'),
+      ('PV-AIIA-2026-002', 'AIIA-CT-002', 'SUBJ-AIIA-0211', 'Guduchi Swarasa Extract', 'Mild Pruritic Skin Rash (Kandu)', 'Moderate', 'Possible (Naranjo Score 4)', '2026-09-27', '15 Days Routine', 'Under Review'),
+      ('PV-AIIA-2026-003', 'AIIA-CT-003', 'SUBJ-AIIA-0318', 'Withania somnifera Extract', 'Sudden Somnolence / Sedation', 'Mild', 'Probable (WHO-UMC)', '2026-09-29', '15 Days Routine', 'Submitted to CDSCO'),
+      ('PV-AIIA-2026-004', 'AIIA-CT-002', 'SUBJ-AIIA-0229', 'Adjuvant Formulation Admixture', 'Acute Hepatobiliary Enzyme Elevation (ALT > 3x)', 'Serious (SAE)', 'Unlikely / Concomitant Chemo', '2026-09-30', '7 Days (Expedited)', 'Expedited Expedited');
+
+      INSERT INTO pv_safety_signals (signal_id, formulation_name, adverse_event_term, prr_score, ror_score, case_count, signal_status, action_taken) VALUES
+      ('SIG-AY-01', 'Nishamalaki Vati', 'Epigastric Discomfort / Dyspepsia', 2.34, 2.45, 12, 'Validated Low-Risk', 'Labeling guidance: Administer strictly post-prandial'),
+      ('SIG-AY-02', 'Standardized Ashwagandha', 'Transient Drowsiness / Daytime Lethargy', 3.12, 3.28, 9, 'Active Monitoring', 'Dose timing shifted to bedtime administration'),
+      ('SIG-AY-03', 'Guggulu Formulations', 'Mild Diarrhea / Loose Stools', 1.88, 1.94, 6, 'Under Evaluation', 'Hydration advisory added to patient information sheet');
+
+      INSERT INTO pv_meddra_whodrug (soc_term, pt_term, meddra_code, asu_botanical_name, whodrug_id, active_phytochemical) VALUES
+      ('Gastrointestinal disorders', 'Dyspepsia / Acid regurgitation', '10013946', 'Phyllanthus emblica (Amalaki)', 'WHO-D-09412', 'Ascorbic acid, Gallic acid, Ellagitannins'),
+      ('Skin and subcutaneous tissue', 'Pruritus / Rash', '10037087', 'Tinospora cordifolia (Guduchi)', 'WHO-D-07812', 'Tinosporaside, Berberine, Giloin'),
+      ('Nervous system disorders', 'Somnolence / Sedation', '10041349', 'Withania somnifera (Ashwagandha)', 'WHO-D-03194', 'Withaferin A, Withanolide D'),
+      ('Hepatobiliary disorders', 'Alanine aminotransferase increased', '10001551', 'Curcuma longa (Haridra)', 'WHO-D-05511', 'Curcuminoids, Turmerone');
+
+      INSERT INTO pv_periodic_reports (report_code, title, reporting_period, total_exposure_subjects, total_ae_recorded, benefit_risk_conclusion, submission_status) VALUES
+      ('PSUR-2026-H1', 'Periodic Safety Update Report: Nishamalaki Protocol', '01 Jan 2026 - 30 Jun 2026', 412, 14, 'Favourable Benefit-Risk', 'Approved by NPvCC'),
+      ('PSUR-2026-H2', 'Periodic Safety Update Report: Rasayana Oncology Adjuvant', '01 Apr 2026 - 30 Sep 2026', 248, 8, 'Favourable Benefit-Risk', 'Submitted to CDSCO'),
+      ('PBRER-2026-Q3', 'Periodic Benefit-Risk Evaluation Report: Ashwagandha Extract', '01 Jul 2026 - 30 Sep 2026', 196, 5, 'Acceptable Safety Margin', 'Approved by NPvCC');
     `);
   }
 }
@@ -199,6 +272,24 @@ export async function GET(req: Request) {
       if (tab === 'closeout' || tab === 'all') {
         const res = await client.query('SELECT * FROM trial_closeout_checklist ORDER BY id ASC');
         data.closeoutChecklist = res.rows;
+      }
+
+      // PHARMACOVIGILANCE TABS
+      if (tab === 'safety-reporting' || tab === 'all') {
+        const res = await client.query('SELECT * FROM pv_safety_reports ORDER BY id ASC');
+        data.pvReports = res.rows;
+      }
+      if (tab === 'signal-detection' || tab === 'all') {
+        const res = await client.query('SELECT * FROM pv_safety_signals ORDER BY id ASC');
+        data.pvSignals = res.rows;
+      }
+      if (tab === 'meddra' || tab === 'all') {
+        const res = await client.query('SELECT * FROM pv_meddra_whodrug ORDER BY id ASC');
+        data.meddraList = res.rows;
+      }
+      if (tab === 'pv-reports' || tab === 'all') {
+        const res = await client.query('SELECT * FROM pv_periodic_reports ORDER BY id ASC');
+        data.periodicReports = res.rows;
       }
 
       return NextResponse.json({ success: true, source: 'neon_postgres', data });
