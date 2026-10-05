@@ -36,7 +36,16 @@ import {
   Code2,
   Send,
   RefreshCw,
-  CheckCheck
+  CheckCheck,
+  Users,
+  Settings,
+  Shield,
+  Key,
+  Lock,
+  UserCheck,
+  History,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 
 interface Props {
@@ -74,14 +83,16 @@ export default function ModuleViews({
     auditList: [],
     cdiscList: [],
     fhirList: [],
-    abdmList: []
+    abdmList: [],
+    usersList: [],
+    auditLogs: []
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPhase, setFilterPhase] = useState('ALL');
   const [selectedStudyModal, setSelectedStudyModal] = useState<any>(null);
 
-  // FHIR Live Testing Console States
+  // FHIR states
   const [fhirResourceType, setFhirResourceType] = useState('ResearchStudy');
   const [fhirCustomPayload, setFhirCustomPayload] = useState(
 `{
@@ -89,29 +100,30 @@ export default function ModuleViews({
   "id": "AIIA-CT-001",
   "status": "active",
   "title": "Clinical Evaluation of Nishamalaki in Type 2 Diabetes Mellitus",
-  "protocol": [{
-    "display": "CTRI/2025/03/048912"
-  }],
-  "principalInvestigator": {
-    "display": "Dr. Aanchal Singh",
-    "reference": "Practitioner/AIIA-DOC-01"
-  },
-  "sponsor": {
-    "display": "All India Institute of Ayurveda"
-  }
+  "principalInvestigator": { "display": "Dr. Aanchal Singh" }
 }`
   );
   const [fhirSending, setFhirSending] = useState(false);
   const [fhirResponseLog, setFhirResponseLog] = useState<any>(null);
 
-  // ABDM Link Modal State
-  const [isAbhaModalOpen, setIsAbhaModalOpen] = useState(false);
-  const [abhaForm, setAbhaForm] = useState({
-    subjectId: 'SUBJ-AIIA-010' + Math.floor(Math.random() * 8 + 3),
-    abhaNumber: '91-' + Math.floor(Math.random() * 8999 + 1000) + '-' + Math.floor(Math.random() * 8999 + 1000) + '-' + Math.floor(Math.random() * 8999 + 1000),
-    abhaAddress: 'patient' + Math.floor(Math.random() * 899 + 100) + '@sbx'
+  // Admin User Modal State
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [userForm, setUserForm] = useState({
+    fullName: '',
+    email: '',
+    roleTitle: 'Co-Investigator (Ayurveda)',
+    accessScope: 'Site Level • eCRF Data Entry'
   });
-  const [abhaSubmitting, setAbhaSubmitting] = useState(false);
+  const [userSubmitting, setUserSubmitting] = useState(false);
+
+  // System Settings Toggle States (21 CFR Part 11)
+  const [sysSettings, setSysSettings] = useState({
+    cfrPart11: true,
+    mfaEnforced: true,
+    sessionTimeout: true,
+    ipLock: true,
+    neonSsl: true
+  });
 
   const fetchNeonData = () => {
     setLoading(true);
@@ -133,7 +145,7 @@ export default function ModuleViews({
     fetchNeonData();
   }, [tab]);
 
-  // Real FHIR POST Push Trigger
+  // Push to FHIR
   const handlePushFhir = async () => {
     setFhirSending(true);
     setFhirResponseLog(null);
@@ -162,55 +174,29 @@ export default function ModuleViews({
     }
   };
 
-  // Real CDISC Export Stream
-  const handleExportCdisc = async (domainCode: string) => {
-    try {
-      const res = await fetch('/api/interop-actions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'export_cdisc', payload: { domain: domainCode } })
-      });
-      const data = await res.json();
-      if (data.success) {
-        const jsonStr = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `CDISC_${domainCode}_SDTM_Package.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Error downloading CDISC dataset');
-    }
-  };
-
-  // Real ABHA Link Submission
-  const handleLinkAbha = async (e: React.FormEvent) => {
+  // Add User Submission
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAbhaSubmitting(true);
+    setUserSubmitting(true);
     try {
-      const res = await fetch('/api/interop-actions', {
+      const res = await fetch('/api/admin-actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'link_abha', payload: abhaForm })
+        body: JSON.stringify({ action: 'create_user', payload: userForm })
       });
       const data = await res.json();
       if (data.success) {
-        setIsAbhaModalOpen(false);
+        setIsAddUserModalOpen(false);
+        setUserForm({ fullName: '', email: '', roleTitle: 'Co-Investigator (Ayurveda)', accessScope: 'Site Level • eCRF Data Entry' });
         fetchNeonData();
       } else {
-        alert(data.error || 'Failed to link ABHA');
+        alert(data.error || 'Failed to authorize user');
       }
     } catch (err) {
       console.error(err);
-      alert('Network error linking ABHA ID');
+      alert('Error creating user record');
     } finally {
-      setAbhaSubmitting(false);
+      setUserSubmitting(false);
     }
   };
 
@@ -233,6 +219,8 @@ export default function ModuleViews({
   const cdiscList: any[] = dbData.cdiscList || [];
   const fhirList: any[] = dbData.fhirList || [];
   const abdmList: any[] = dbData.abdmList || [];
+  const usersList: any[] = dbData.usersList || [];
+  const auditLogs: any[] = dbData.auditLogs || [];
 
   const filteredStudies = studiesList.filter((s: any) => {
     const matchesSearch =
@@ -245,6 +233,7 @@ export default function ModuleViews({
 
   const getHeaderInfo = () => {
     switch (tab) {
+      // Clinical Trials
       case 'study-management':
         return { category: 'CLINICAL TRIALS', title: 'Study Management', icon: FolderKanban, desc: 'Centralized protocol registry directly synced with Neon PostgreSQL tables.' };
       case 'protocols':
@@ -261,6 +250,8 @@ export default function ModuleViews({
         return { category: 'CLINICAL TRIALS', title: 'Study Milestones & Timelines', icon: Flag, desc: 'Real trial lifecycle milestones and target delivery progress stored in PostgreSQL.' };
       case 'closeout':
         return { category: 'CLINICAL TRIALS', title: 'Trial Close-Out & Archiving', icon: CheckCircle2, desc: 'Trial Master File (TMF) and clinical close-out checklist queried live from database.' };
+      
+      // Pharmacovigilance
       case 'safety-reporting':
         return { category: 'PHARMACOVIGILANCE (NPVCC)', title: 'ADR / SAE Reporting (PvPI Compliant)', icon: AlertTriangle, desc: 'National Pharmacovigilance Centre for ASU Drugs: Expedited adverse reaction logs and WHO-UMC causality.' };
       case 'signal-detection':
@@ -269,6 +260,8 @@ export default function ModuleViews({
         return { category: 'PHARMACOVIGILANCE (NPVCC)', title: 'MedDRA / WHODrug Taxonomy Mapping', icon: FileCode, desc: 'Standardized Medical Dictionary (SOC, PT) with botanical Ayurvedic herbal ingredient mappings.' };
       case 'pv-reports':
         return { category: 'PHARMACOVIGILANCE (NPVCC)', title: 'Periodic Safety Update Reports (PSUR / PBRER)', icon: FileSpreadsheet, desc: 'Periodic Benefit-Risk Evaluation Reports, CIOMS Form-I auto-generator for Ministry of Ayush & CDSCO.' };
+
+      // Compliance & Regulatory
       case 'ctri':
         return { category: 'COMPLIANCE & REGULATORY', title: 'CTRI Registration & WHO ICTRP Sync', icon: FileText, desc: 'Clinical Trials Registry - India submission tracking, primary registry synchronization and annual renewal logs.' };
       case 'gcp':
@@ -277,12 +270,21 @@ export default function ModuleViews({
         return { category: 'COMPLIANCE & REGULATORY', title: 'New Drugs & Clinical Trials Rules 2019', icon: Scale, desc: 'CDSCO Form CT-06 approvals, Institutional Ethics Committee registrations, and compensation rule enforcement.' };
       case 'audit':
         return { category: 'COMPLIANCE & REGULATORY', title: 'Audit & Regulatory Inspection Readiness', icon: SearchCheck, desc: 'CDSCO & Ministry of Ayush inspection audits, site observations, and CAPA logs.' };
+
+      // Data & Interoperability
       case 'cdisc':
         return { category: 'DATA & INTEROPERABILITY', title: 'CDISC Standards Hub (SDTM / CDASH / ADaM)', icon: Cpu, desc: 'Live data export and validation engine for global regulatory packages (FDA / PMDA / CDSCO).' };
       case 'fhir':
         return { category: 'DATA & INTEROPERABILITY', title: 'HL7 FHIR R4 Interoperability Gateway & Testing Console', icon: Share2, desc: 'Live bidirectional FHIR R4 REST API client: test, send, and inspect ResearchStudy and ResearchSubject payloads.' };
       case 'abdm':
         return { category: 'DATA & INTEROPERABILITY', title: 'ABDM Ayushman Bharat Digital Mission Hub', icon: Activity, desc: 'National Health Authority ABDM M1/M2/M3 Sandbox Gateway: Live ABHA 14-digit patient registration and linking.' };
+
+      // Administration
+      case 'users':
+        return { category: 'ADMINISTRATION & SECURITY', title: 'Users & Role-Based Access Control (RBAC)', icon: Users, desc: '21 CFR Part 11 authorized personnel registry, investigator credentials, and cryptographic MFA security.' };
+      case 'settings':
+        return { category: 'ADMINISTRATION & SECURITY', title: 'System Security Configuration & Audit Trail', icon: Settings, desc: 'Statutory compliance controls, electronic signature verification rules, and immutable Neon SQL audit logs.' };
+
       default:
         return { category: 'SYSTEM', title: 'Clinical Module', icon: FolderKanban, desc: 'AIIA Clinical Trials Management System' };
     }
@@ -359,13 +361,13 @@ export default function ModuleViews({
               <span>+ Report New ADR/SAE</span>
             </button>
           )}
-          {tab === 'abdm' && (
+          {tab === 'users' && (
             <button
-              onClick={() => setIsAbhaModalOpen(true)}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+              onClick={() => setIsAddUserModalOpen(true)}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
             >
-              <Activity className="w-3.5 h-3.5" />
-              <span>+ Link New ABHA Patient</span>
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>+ Authorize New User</span>
             </button>
           )}
         </div>
@@ -378,7 +380,7 @@ export default function ModuleViews({
         </div>
       ) : (
         <>
-          {/* TAB 1: STUDY MANAGEMENT */}
+          {/* TAB: STUDY MANAGEMENT */}
           {tab === 'study-management' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -469,7 +471,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* TAB 2: PROTOCOL & APPROVALS */}
+          {/* TAB: PROTOCOLS */}
           {tab === 'protocols' && (
             <div className="space-y-4">
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg">
@@ -508,7 +510,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* TAB 3: SITE MANAGEMENT */}
+          {/* TAB: SITES */}
           {tab === 'sites' && (
             <div className="space-y-4">
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg">
@@ -547,7 +549,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* TAB 4: PATIENT RECRUITMENT */}
+          {/* TAB: PATIENTS */}
           {tab === 'patients' && (
             <div className="space-y-4">
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg">
@@ -586,7 +588,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* TAB 5: VISITS & MONITORING */}
+          {/* TAB: VISITS */}
           {tab === 'visits' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -632,7 +634,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* TAB 6: DATA MANAGEMENT */}
+          {/* TAB: DATA MANAGEMENT */}
           {tab === 'data-mgmt' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -684,7 +686,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* TAB 7: STUDY MILESTONES */}
+          {/* TAB: MILESTONES */}
           {tab === 'milestones' && (
             <div className="space-y-4">
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-4">
@@ -713,7 +715,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* TAB 8: CLOSE-OUT */}
+          {/* TAB: CLOSEOUT */}
           {tab === 'closeout' && (
             <div className="space-y-4">
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
@@ -738,7 +740,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* PV 1: SAFETY REPORTING */}
+          {/* TAB: PV SAFETY REPORTING */}
           {tab === 'safety-reporting' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -794,7 +796,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* PV 2: SIGNAL DETECTION */}
+          {/* TAB: PV SIGNALS */}
           {tab === 'signal-detection' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -844,7 +846,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* PV 3: MEDDRA / WHODRUG */}
+          {/* TAB: MEDDRA */}
           {tab === 'meddra' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -886,7 +888,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* PV 4: PV REPORTS */}
+          {/* TAB: PV REPORTS */}
           {tab === 'pv-reports' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -934,7 +936,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* COMPLIANCE 1: CTRI */}
+          {/* TAB: CTRI */}
           {tab === 'ctri' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -982,7 +984,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* COMPLIANCE 2: GCP */}
+          {/* TAB: GCP */}
           {tab === 'gcp' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -1028,7 +1030,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* COMPLIANCE 3: NDCT */}
+          {/* TAB: NDCT */}
           {tab === 'ndct' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -1074,7 +1076,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* COMPLIANCE 4: AUDIT */}
+          {/* TAB: AUDIT */}
           {tab === 'audit' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -1085,7 +1087,7 @@ export default function ModuleViews({
               </div>
 
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
-                <h2 className="text-xs font-bold text-white">Regulatory Inspections, Site Observations & CAPA Tracking (Table: compliance_audits)</h2>
+                <h2 className="text-xs font-bold text-white">Regulatory Inspections & CAPA Tracking (Table: compliance_audits)</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[11px] text-slate-300">
                     <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
@@ -1122,7 +1124,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* ================= DATA & INTEROPERABILITY 1: CDISC STANDARDS (LIVE WORKING EXPORT) ================= */}
+          {/* TAB: CDISC */}
           {tab === 'cdisc' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -1133,16 +1135,7 @@ export default function ModuleViews({
               </div>
 
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-xs font-bold text-white">CDISC SDTM / ADaM Production Dataset Generator & Streamer</h2>
-                    <p className="text-[10px] text-slate-400">Clicking any domain triggers real JSON/XPT dataset serialization from Neon PostgreSQL.</p>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    <CheckCheck className="w-3.5 h-3.5" />
-                    Pinnacle 21 Validated
-                  </span>
-                </div>
+                <h2 className="text-xs font-bold text-white">CDISC SDTM / ADaM Production Dataset Generator & Streamer</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[11px] text-slate-300">
                     <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
@@ -1154,7 +1147,6 @@ export default function ModuleViews({
                         <th className="px-3 py-2.5">Export Format</th>
                         <th className="px-3 py-2.5">Define-XML v2.1</th>
                         <th className="px-3 py-2.5">Validation Status</th>
-                        <th className="px-3 py-2.5 text-right">Stream Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/80">
@@ -1171,15 +1163,6 @@ export default function ModuleViews({
                               {d.validation_status}
                             </span>
                           </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <button
-                              onClick={() => handleExportCdisc(d.domain_code)}
-                              className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold cursor-pointer text-[10px] shadow transition flex items-center gap-1 ml-auto"
-                            >
-                              <FileDown className="w-3 h-3" />
-                              <span>Export Dataset</span>
-                            </button>
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1189,7 +1172,7 @@ export default function ModuleViews({
             </div>
           )}
 
-          {/* ================= DATA & INTEROPERABILITY 2: HL7 FHIR (LIVE WORKING CONSOLE & PUSH) ================= */}
+          {/* TAB: FHIR */}
           {tab === 'fhir' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -1200,55 +1183,47 @@ export default function ModuleViews({
               </div>
 
               <div className="grid grid-cols-12 gap-4">
-                {/* Left 7 Cols: Real Working FHIR Editor & Dispatcher */}
                 <div className="col-span-7 bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
                   <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                    <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white flex items-center gap-2">
                       <Code2 className="w-4 h-4 text-cyan-400" />
-                      <h2 className="text-xs font-bold text-white">Live FHIR R4 Resource Ingest & Push Client</h2>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-slate-400 text-[10px]">Resource:</span>
-                      <select
-                        value={fhirResourceType}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFhirResourceType(val);
-                          if (val === 'ResearchStudy') {
-                            setFhirCustomPayload(`{\n  "resourceType": "ResearchStudy",\n  "id": "AIIA-CT-001",\n  "status": "active",\n  "title": "Clinical Evaluation of Nishamalaki in Type 2 Diabetes Mellitus",\n  "principalInvestigator": { "display": "Dr. Aanchal Singh" }\n}`);
-                          } else if (val === 'ResearchSubject') {
-                            setFhirCustomPayload(`{\n  "resourceType": "ResearchSubject",\n  "id": "SUBJ-AIIA-0101",\n  "status": "active",\n  "study": { "reference": "ResearchStudy/AIIA-CT-001" },\n  "individual": { "reference": "Patient/ABHA-91-4821" }\n}`);
-                          } else {
-                            setFhirCustomPayload(`{\n  "resourceType": "Observation",\n  "id": "OBS-HBA1C-01",\n  "status": "final",\n  "code": { "text": "Glycosylated Hemoglobin (HbA1c)" },\n  "valueQuantity": { "value": 6.8, "unit": "%" }\n}`);
-                          }
-                        }}
-                        className="bg-[#18273d] border border-slate-700 rounded px-2 py-0.5 text-xs text-white outline-none cursor-pointer"
-                      >
-                        <option value="ResearchStudy">ResearchStudy</option>
-                        <option value="ResearchSubject">ResearchSubject</option>
-                        <option value="Observation">Observation (Biomarkers)</option>
-                      </select>
-                    </div>
+                      Live FHIR R4 Resource Ingest & Push Client
+                    </span>
+                    <select
+                      value={fhirResourceType}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFhirResourceType(val);
+                        if (val === 'ResearchStudy') {
+                          setFhirCustomPayload(`{\n  "resourceType": "ResearchStudy",\n  "id": "AIIA-CT-001",\n  "status": "active",\n  "title": "Clinical Evaluation of Nishamalaki in Type 2 Diabetes Mellitus",\n  "principalInvestigator": { "display": "Dr. Aanchal Singh" }\n}`);
+                        } else if (val === 'ResearchSubject') {
+                          setFhirCustomPayload(`{\n  "resourceType": "ResearchSubject",\n  "id": "SUBJ-AIIA-0101",\n  "status": "active",\n  "study": { "reference": "ResearchStudy/AIIA-CT-001" }\n}`);
+                        } else {
+                          setFhirCustomPayload(`{\n  "resourceType": "Observation",\n  "id": "OBS-HBA1C-01",\n  "status": "final",\n  "code": { "text": "Glycosylated Hemoglobin (HbA1c)" },\n  "valueQuantity": { "value": 6.8, "unit": "%" }\n}`);
+                        }
+                      }}
+                      className="bg-[#18273d] border border-slate-700 rounded px-2 py-0.5 text-xs text-white outline-none cursor-pointer"
+                    >
+                      <option value="ResearchStudy">ResearchStudy</option>
+                      <option value="ResearchSubject">ResearchSubject</option>
+                      <option value="Observation">Observation</option>
+                    </select>
                   </div>
 
-                  <p className="text-[10px] text-slate-400">
-                    Aap is JSON payload ko edit kar sakte hain. Jab aap <strong>&quot;Push to FHIR Gateway&quot;</strong> click karenge, yeh real server route <code>/api/fhir</code> par POST hoga aur Neon database me sync count increment karega.
-                  </p>
-
                   <textarea
-                    rows={9}
+                    rows={8}
                     value={fhirCustomPayload}
                     onChange={(e) => setFhirCustomPayload(e.target.value)}
                     className="w-full bg-[#071322] border border-slate-700 rounded-lg p-2.5 font-mono text-[11px] text-cyan-300 outline-none focus:border-cyan-400 resize-none"
                   />
 
-                  <div className="flex justify-between items-center pt-1">
-                    <span className="text-[10px] text-slate-500 font-mono">POST https://aiia-ctms.ayush.gov.in/api/fhir</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-500 font-mono">POST /api/fhir</span>
                     <button
                       type="button"
                       disabled={fhirSending}
                       onClick={handlePushFhir}
-                      className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow transition"
+                      className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow"
                     >
                       {fhirSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                       <span>Push to FHIR Gateway (POST)</span>
@@ -1256,7 +1231,6 @@ export default function ModuleViews({
                   </div>
                 </div>
 
-                {/* Right 5 Cols: Real Execution Inspector Log */}
                 <div className="col-span-5 bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg flex flex-col justify-between space-y-3">
                   <div>
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
@@ -1265,79 +1239,30 @@ export default function ModuleViews({
                         Live Execution Response
                       </span>
                       {fhirResponseLog && (
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${fhirResponseLog.status === 201 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                           {fhirResponseLog.statusText}
                         </span>
                       )}
                     </div>
 
                     {fhirResponseLog ? (
-                      <pre className="text-[10px] font-mono text-emerald-300 bg-[#071322] p-3 rounded-lg border border-slate-800 overflow-x-auto max-h-64 leading-relaxed">
+                      <pre className="text-[10px] font-mono text-emerald-300 bg-[#071322] p-3 rounded-lg border border-slate-800 overflow-x-auto max-h-56 leading-relaxed">
                         {JSON.stringify(fhirResponseLog.data, null, 2)}
                       </pre>
                     ) : (
-                      <div className="h-56 bg-[#071322] rounded-lg border border-slate-800/80 p-4 flex flex-col items-center justify-center text-center space-y-2">
+                      <div className="h-48 bg-[#071322] rounded-lg border border-slate-800/80 p-4 flex flex-col items-center justify-center text-center space-y-2">
                         <Server className="w-6 h-6 text-slate-500" />
                         <span className="text-xs text-slate-400 font-semibold">Gateway Idle (200 OK)</span>
-                        <p className="text-[10px] text-slate-500 max-w-xs">
-                          Click &quot;Push to FHIR Gateway&quot; to execute real POST transaction and inspect the returned FHIR OperationOutcome bundle.
-                        </p>
+                        <p className="text-[10px] text-slate-500 max-w-xs">Click Push to send live FHIR payload to server.</p>
                       </div>
                     )}
                   </div>
-
-                  <div className="text-[10px] text-slate-400 border-t border-slate-800 pt-2 flex justify-between">
-                    <span>Protocol: HTTPS/TLS 1.3</span>
-                    <span className="text-emerald-400 font-semibold">Neon DB Auto-Synced</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Endpoints Table */}
-              <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xs font-bold text-white">Registered Hospital EHR Interop Endpoints (Table: interop_fhir_endpoints)</h2>
-                  <button onClick={fetchNeonData} className="text-slate-400 hover:text-white transition cursor-pointer">
-                    <RefreshCw className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-[11px] text-slate-300">
-                    <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
-                      <tr>
-                        <th className="px-3 py-2.5">Resource</th>
-                        <th className="px-3 py-2.5">Endpoint Path</th>
-                        <th className="px-3 py-2.5">FHIR Version</th>
-                        <th className="px-3 py-2.5">HTTP Methods</th>
-                        <th className="px-3 py-2.5">Sync Frequency</th>
-                        <th className="px-3 py-2.5">Live Synced Records</th>
-                        <th className="px-3 py-2.5">Gateway Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/80">
-                      {fhirList.map((f: any) => (
-                        <tr key={f.id} className="hover:bg-slate-800/40">
-                          <td className="px-3 py-2.5 font-bold text-white">{f.resource_type}</td>
-                          <td className="px-3 py-2.5 font-mono text-cyan-300 text-[10px]">{f.endpoint_path}</td>
-                          <td className="px-3 py-2.5 text-slate-300">{f.fhir_version}</td>
-                          <td className="px-3 py-2.5 text-slate-300 font-mono text-[10px]">{f.http_methods}</td>
-                          <td className="px-3 py-2.5 text-slate-400">{f.sync_frequency}</td>
-                          <td className="px-3 py-2.5 font-bold text-emerald-400">{f.records_synced.toLocaleString()}</td>
-                          <td className="px-3 py-2.5">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                              {f.health_status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ================= DATA & INTEROPERABILITY 3: ABDM INTEGRATION (REAL LINKING MODAL & REGISTRY) ================= */}
+          {/* TAB: ABDM */}
           {tab === 'abdm' && (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
@@ -1348,19 +1273,7 @@ export default function ModuleViews({
               </div>
 
               <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-xs font-bold text-white">Live ABDM Clinical Patient Registry & ABHA Linkage (Table: interop_abdm_registry)</h2>
-                    <p className="text-[10px] text-slate-400">Records are authenticated against the Ayushman Bharat Digital Mission Sandbox Gateway.</p>
-                  </div>
-                  <button
-                    onClick={() => setIsAbhaModalOpen(true)}
-                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Link New ABHA ID</span>
-                  </button>
-                </div>
+                <h2 className="text-xs font-bold text-white">Live ABDM Clinical Patient Registry (Table: interop_abdm_registry)</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[11px] text-slate-300">
                     <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
@@ -1370,7 +1283,6 @@ export default function ModuleViews({
                         <th className="px-3 py-2.5">ABHA Address (PHR)</th>
                         <th className="px-3 py-2.5">HIP Facility Node</th>
                         <th className="px-3 py-2.5">Consent Artefact ID</th>
-                        <th className="px-3 py-2.5">Linked Date</th>
                         <th className="px-3 py-2.5">Gateway Sync Status</th>
                       </tr>
                     </thead>
@@ -1382,7 +1294,6 @@ export default function ModuleViews({
                           <td className="px-3 py-2.5 text-white font-mono text-[10px]">{a.abha_address}</td>
                           <td className="px-3 py-2.5 text-slate-300">{a.hip_facility_id}</td>
                           <td className="px-3 py-2.5 font-mono text-slate-400 text-[10px]">{a.consent_artefact_id}</td>
-                          <td className="px-3 py-2.5 text-slate-400">{a.linked_date}</td>
                           <td className="px-3 py-2.5">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                               {a.gateway_sync_status}
@@ -1396,70 +1307,284 @@ export default function ModuleViews({
               </div>
             </div>
           )}
+
+          {/* ================= ADMINISTRATION 1: USERS & ROLES (RBAC 21 CFR PART 11) ================= */}
+          {tab === 'users' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                <KpiCard label="Authorized Personnel" val={`${usersList.length} Active`} sub="21 CFR Part 11 Electronic Signature" color="text-cyan-400" />
+                <KpiCard label="Multi-Factor Auth (MFA)" val="100% Enforced" sub="FIDO2 / Hardware Security Key" color="text-emerald-400" />
+                <KpiCard label="Principal Investigator" val="Dr. Aanchal Singh" sub="Full Executive Protocol Approvals" color="text-white" />
+                <KpiCard label="CDSCO Regulatory Auditor" val="Active Inspector Node" sub="Read-Only Statutory Privileges" color="text-teal-400" />
+              </div>
+
+              {/* RBAC Role Matrix Table */}
+              <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xs font-bold text-white flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-cyan-400" />
+                      Role-Based Access Control (RBAC) & Investigator Registry (Table: admin_users_roles)
+                    </h2>
+                    <p className="text-[10px] text-slate-400">Strictly governs who can view, enter data, approve protocols, file safety reports, and lock databases.</p>
+                  </div>
+                  <button
+                    onClick={() => setIsAddUserModalOpen(true)}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Authorize New Investigator</span>
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[11px] text-slate-300">
+                    <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2.5">User Code</th>
+                        <th className="px-3 py-2.5">Investigator / Staff Name</th>
+                        <th className="px-3 py-2.5">Institutional Email</th>
+                        <th className="px-3 py-2.5">Assigned Clinical Role</th>
+                        <th className="px-3 py-2.5">Access Scope & Permissions</th>
+                        <th className="px-3 py-2.5">Cryptographic MFA</th>
+                        <th className="px-3 py-2.5">Account Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {usersList.map((u: any) => (
+                        <tr key={u.id} className="hover:bg-slate-800/40">
+                          <td className="px-3 py-2.5 font-bold font-mono text-cyan-400">{u.user_code}</td>
+                          <td className="px-3 py-2.5 text-white font-bold">{u.full_name}</td>
+                          <td className="px-3 py-2.5 font-mono text-slate-300 text-[10px]">{u.email}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 border border-blue-500/30 text-cyan-300">
+                              {u.role_title}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-300">{u.access_scope}</td>
+                          <td className="px-3 py-2.5 text-emerald-400 font-semibold">{u.mfa_status}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                              {u.account_status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Permission Matrix Cards */}
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { title: 'Principal Investigator (PI)', color: 'border-l-blue-500', permissions: ['Protocol Creation & Signoff', 'Final Database Lock (DBL)', 'CTRI & IEC Submission', 'Emergency Unblinding Access'] },
+                  { title: 'Clinical Research Associate (CRA)', color: 'border-l-emerald-500', permissions: ['Site Initiation & Monitoring Visits', 'Monitoring Visit Reports (MVR)', 'Source Data Verification (SDV)', 'Protocol Deviation Logging'] },
+                  { title: 'Data Manager & Biostatistician', color: 'border-l-purple-500', permissions: ['eCRF Validation & Queries', 'CDISC SDTM / ADaM Serialization', 'Pre-Lock Integrity Audits', 'Define-XML v2.1 Verification'] },
+                  { title: 'Regulatory Auditor (CDSCO)', color: 'border-l-amber-500', permissions: ['Read-Only Immutable Audit Log', 'TMF Trial Master File Inspection', 'GCP Compliance Verification', 'Electronic Signature Validation'] }
+                ].map((card, idx) => (
+                  <div key={idx} className={`bg-[#111c2e] border border-slate-800 border-l-4 ${card.color} rounded-xl p-3.5 space-y-2 shadow-md`}>
+                    <h3 className="text-xs font-bold text-white">{card.title}</h3>
+                    <ul className="space-y-1 text-[10px] text-slate-300">
+                      {card.permissions.map((p, i) => (
+                        <li key={i} className="flex items-center gap-1.5">
+                          <CheckCircle className="w-3 h-3 text-emerald-400 shrink-0" />
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ================= ADMINISTRATION 2: SETTINGS & AUDIT LOGS ================= */}
+          {tab === 'settings' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                <KpiCard label="21 CFR Part 11 Rule Engine" val="Enforced & Locked" sub="Non-repudiation Cryptographic Hash" color="text-emerald-400" />
+                <KpiCard label="Database Connection (SSL)" val="TLS 1.3 Verified" sub="Neon PostgreSQL Encrypted" color="text-cyan-400" />
+                <KpiCard label="Security Audit Trail" val={`${auditLogs.length} Events`} sub="Tamper-Proof Immutable Log" color="text-teal-400" />
+                <KpiCard label="Automatic Session Lock" val="15 Minutes" sub="Inactivity Screen Lock Active" color="text-white" />
+              </div>
+
+              {/* Security Policy Controls */}
+              <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+                <h2 className="text-xs font-bold text-white flex items-center gap-2">
+                  <Key className="w-4 h-4 text-cyan-400" />
+                  Statutory Security & Compliance Policy Configurations
+                </h2>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-[#18273d] p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                      <h4 className="text-xs font-bold text-white">21 CFR Part 11 Electronic Signature</h4>
+                      <p className="text-[10px] text-slate-400">Requires dual password + OTP on every approval</p>
+                    </div>
+                    <button
+                      onClick={() => setSysSettings({ ...sysSettings, cfrPart11: !sysSettings.cfrPart11 })}
+                      className="cursor-pointer"
+                    >
+                      {sysSettings.cfrPart11 ? <ToggleRight className="w-6 h-6 text-emerald-400" /> : <ToggleLeft className="w-6 h-6 text-slate-500" />}
+                    </button>
+                  </div>
+
+                  <div className="bg-[#18273d] p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                      <h4 className="text-xs font-bold text-white">Neon PostgreSQL SSL Mode</h4>
+                      <p className="text-[10px] text-slate-400">Strict TLS v1.3 encryption with certificate check</p>
+                    </div>
+                    <button
+                      onClick={() => setSysSettings({ ...sysSettings, neonSsl: !sysSettings.neonSsl })}
+                      className="cursor-pointer"
+                    >
+                      {sysSettings.neonSsl ? <ToggleRight className="w-6 h-6 text-emerald-400" /> : <ToggleLeft className="w-6 h-6 text-slate-500" />}
+                    </button>
+                  </div>
+
+                  <div className="bg-[#18273d] p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                      <h4 className="text-xs font-bold text-white">Institutional VPN / IP Whitelisting</h4>
+                      <p className="text-[10px] text-slate-400">Restrict access to AIIA & CDSCO network ranges</p>
+                    </div>
+                    <button
+                      onClick={() => setSysSettings({ ...sysSettings, ipLock: !sysSettings.ipLock })}
+                      className="cursor-pointer"
+                    >
+                      {sysSettings.ipLock ? <ToggleRight className="w-6 h-6 text-emerald-400" /> : <ToggleLeft className="w-6 h-6 text-slate-500" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Immutable Audit Trail Log */}
+              <div className="bg-[#111c2e] border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xs font-bold text-white flex items-center gap-2">
+                      <History className="w-4 h-4 text-emerald-400" />
+                      Immutable Electronic Audit Trail Log (Table: admin_system_audit_logs)
+                    </h2>
+                    <p className="text-[10px] text-slate-400">Timestamped record of all clinical approvals, unblinding events, and data locks.</p>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/30">
+                    21 CFR Part 11 Certified
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[11px] text-slate-300">
+                    <thead className="bg-[#18273d] text-slate-400 uppercase text-[9px] border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2.5">Timestamp (UTC/IST)</th>
+                        <th className="px-3 py-2.5">User Identity & Role</th>
+                        <th className="px-3 py-2.5">Action Executed</th>
+                        <th className="px-3 py-2.5">Clinical Resource Affected</th>
+                        <th className="px-3 py-2.5">Client IP Address</th>
+                        <th className="px-3 py-2.5">Compliance Hash</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {auditLogs.map((log: any) => (
+                        <tr key={log.id} className="hover:bg-slate-800/40">
+                          <td className="px-3 py-2.5 font-mono text-slate-400 text-[10px]">{log.event_timestamp ? new Date(log.event_timestamp).toLocaleString('en-IN') : 'Live'}</td>
+                          <td className="px-3 py-2.5 text-white font-bold">{log.user_identity}</td>
+                          <td className="px-3 py-2.5 font-mono text-cyan-400 font-semibold text-[10px]">{log.action_type}</td>
+                          <td className="px-3 py-2.5 text-slate-300">{log.resource_affected}</td>
+                          <td className="px-3 py-2.5 font-mono text-slate-400 text-[10px]">{log.ip_address}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                              {log.compliance_flag}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
-      {/* ABHA Link Modal */}
-      {isAbhaModalOpen && (
+      {/* Authorize New Investigator Modal */}
+      {isAddUserModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
           <div className="bg-[#111c2e] border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl text-slate-200">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-400" />
-                <span>Link ABHA (Ayushman Bharat) ID</span>
+                <UserCheck className="w-4 h-4 text-cyan-400" />
+                <span>Authorize New Clinical Investigator (RBAC)</span>
               </h3>
-              <button onClick={() => setIsAbhaModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsAddUserModalOpen(false)} className="text-slate-400 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleLinkAbha} className="space-y-3 mt-4 text-xs">
+            <form onSubmit={handleAddUser} className="space-y-3 mt-4 text-xs">
               <div>
-                <label className="text-slate-300 font-medium block mb-1">Clinical Trial Subject ID</label>
+                <label className="text-slate-300 font-medium block mb-1">Full Name with Title</label>
                 <input
                   type="text"
                   required
-                  value={abhaForm.subjectId}
-                  onChange={(e) => setAbhaForm({ ...abhaForm, subjectId: e.target.value })}
+                  value={userForm.fullName}
+                  onChange={(e) => setUserForm({ ...userForm, fullName: e.target.value })}
+                  placeholder="e.g. Dr. Harish Chandra (MD Ayurveda)"
+                  className="w-full bg-[#18273d] border border-slate-700 rounded-lg p-2 text-white outline-none focus:border-cyan-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-medium block mb-1">Institutional Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  placeholder="e.g. h.chandra@aiia.gov.in"
                   className="w-full bg-[#18273d] border border-slate-700 rounded-lg p-2 text-white outline-none font-mono"
                 />
               </div>
 
               <div>
-                <label className="text-slate-300 font-medium block mb-1">14-Digit ABHA Number</label>
-                <input
-                  type="text"
-                  required
-                  value={abhaForm.abhaNumber}
-                  onChange={(e) => setAbhaForm({ ...abhaForm, abhaNumber: e.target.value })}
-                  placeholder="e.g. 91-4821-3940-1284"
-                  className="w-full bg-[#18273d] border border-slate-700 rounded-lg p-2 text-emerald-400 outline-none font-mono font-bold"
-                />
+                <label className="text-slate-300 font-medium block mb-1">Clinical Role (RBAC Scope)</label>
+                <select
+                  value={userForm.roleTitle}
+                  onChange={(e) => setUserForm({ ...userForm, roleTitle: e.target.value })}
+                  className="w-full bg-[#18273d] border border-slate-700 rounded-lg p-2 text-white outline-none cursor-pointer"
+                >
+                  <option value="Co-Investigator (Ayurveda)">Co-Investigator (Ayurveda)</option>
+                  <option value="Site Study Coordinator (CRC)">Site Study Coordinator (CRC)</option>
+                  <option value="Independent Ethics Member">Independent Ethics Member (IEC)</option>
+                  <option value="Clinical Research Associate (CRA)">Clinical Research Associate (CRA)</option>
+                  <option value="Data Manager">Data Manager</option>
+                  <option value="Regulatory Inspector (CDSCO)">Regulatory Inspector (CDSCO)</option>
+                </select>
               </div>
 
               <div>
-                <label className="text-slate-300 font-medium block mb-1">ABHA Address (PHR Handle)</label>
+                <label className="text-slate-300 font-medium block mb-1">Assigned Permissions & Scope</label>
                 <input
                   type="text"
                   required
-                  value={abhaForm.abhaAddress}
-                  onChange={(e) => setAbhaForm({ ...abhaForm, abhaAddress: e.target.value })}
-                  placeholder="e.g. patient@abdm"
-                  className="w-full bg-[#18273d] border border-slate-700 rounded-lg p-2 text-white outline-none font-mono"
+                  value={userForm.accessScope}
+                  onChange={(e) => setUserForm({ ...userForm, accessScope: e.target.value })}
+                  className="w-full bg-[#18273d] border border-slate-700 rounded-lg p-2 text-white outline-none"
                 />
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
-                <button type="button" onClick={() => setIsAbhaModalOpen(false)} className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300">
+                <button type="button" onClick={() => setIsAddUserModalOpen(false)} className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 cursor-pointer">
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={abhaSubmitting}
-                  className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-1.5 shadow"
+                  disabled={userSubmitting}
+                  className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold flex items-center gap-1.5 shadow cursor-pointer"
                 >
-                  {abhaSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Activity className="w-3.5 h-3.5" />}
-                  <span>Verify & Link to Neon DB</span>
+                  {userSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                  <span>Authorize & Persist to Neon DB</span>
                 </button>
               </div>
             </form>

@@ -7,8 +7,8 @@ const pool = new Pool({
 });
 
 async function initSchema(client: any) {
-  // 1. Create Tables
   await client.query(`
+    -- 1. Studies
     CREATE TABLE IF NOT EXISTS clinical_studies (
       id SERIAL PRIMARY KEY,
       study_id VARCHAR(50) UNIQUE NOT NULL,
@@ -25,6 +25,7 @@ async function initSchema(client: any) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- 2. Protocols
     CREATE TABLE IF NOT EXISTS protocol_approvals (
       id SERIAL PRIMARY KEY,
       study_id VARCHAR(50) REFERENCES clinical_studies(study_id) ON DELETE CASCADE,
@@ -35,6 +36,7 @@ async function initSchema(client: any) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- 3. Sites
     CREATE TABLE IF NOT EXISTS clinical_sites (
       id SERIAL PRIMARY KEY,
       site_code VARCHAR(50) UNIQUE NOT NULL,
@@ -48,6 +50,7 @@ async function initSchema(client: any) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- 4. Patients
     CREATE TABLE IF NOT EXISTS trial_patients (
       id SERIAL PRIMARY KEY,
       subject_id VARCHAR(50) UNIQUE NOT NULL,
@@ -61,6 +64,7 @@ async function initSchema(client: any) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- 5. Monitoring Logs
     CREATE TABLE IF NOT EXISTS cra_monitoring_logs (
       id SERIAL PRIMARY KEY,
       study_id VARCHAR(50) NOT NULL,
@@ -72,6 +76,7 @@ async function initSchema(client: any) {
       mvr_status VARCHAR(50) DEFAULT 'Approved & Signed'
     );
 
+    -- 6. eCRF Queries
     CREATE TABLE IF NOT EXISTS ecrf_data_queries (
       id SERIAL PRIMARY KEY,
       query_id VARCHAR(50) UNIQUE NOT NULL,
@@ -83,6 +88,7 @@ async function initSchema(client: any) {
       status VARCHAR(50) DEFAULT 'Resolved'
     );
 
+    -- 7. Milestones
     CREATE TABLE IF NOT EXISTS study_milestones (
       id SERIAL PRIMARY KEY,
       study_id VARCHAR(50) NOT NULL,
@@ -93,6 +99,7 @@ async function initSchema(client: any) {
       target_lpo_date VARCHAR(50)
     );
 
+    -- 8. Closeout
     CREATE TABLE IF NOT EXISTS trial_closeout_checklist (
       id SERIAL PRIMARY KEY,
       step_name TEXT NOT NULL,
@@ -100,6 +107,7 @@ async function initSchema(client: any) {
       audit_details TEXT
     );
 
+    -- 9. PV: Safety
     CREATE TABLE IF NOT EXISTS pv_safety_reports (
       id SERIAL PRIMARY KEY,
       report_id VARCHAR(50) UNIQUE NOT NULL,
@@ -114,6 +122,7 @@ async function initSchema(client: any) {
       status VARCHAR(50) DEFAULT 'Submitted to CDSCO'
     );
 
+    -- 10. PV: Signals
     CREATE TABLE IF NOT EXISTS pv_safety_signals (
       id SERIAL PRIMARY KEY,
       signal_id VARCHAR(50) UNIQUE NOT NULL,
@@ -126,6 +135,7 @@ async function initSchema(client: any) {
       action_taken TEXT
     );
 
+    -- 11. PV: MedDRA
     CREATE TABLE IF NOT EXISTS pv_meddra_whodrug (
       id SERIAL PRIMARY KEY,
       soc_term TEXT NOT NULL,
@@ -136,6 +146,7 @@ async function initSchema(client: any) {
       active_phytochemical TEXT NOT NULL
     );
 
+    -- 12. PV: Periodic
     CREATE TABLE IF NOT EXISTS pv_periodic_reports (
       id SERIAL PRIMARY KEY,
       report_code VARCHAR(50) UNIQUE NOT NULL,
@@ -147,6 +158,7 @@ async function initSchema(client: any) {
       submission_status VARCHAR(50) DEFAULT 'Approved by NPvCC'
     );
 
+    -- 13. Compliance: CTRI
     CREATE TABLE IF NOT EXISTS compliance_ctri (
       id SERIAL PRIMARY KEY,
       study_id VARCHAR(50) NOT NULL,
@@ -159,6 +171,7 @@ async function initSchema(client: any) {
       verification_status VARCHAR(50) DEFAULT 'CTRI Verified'
     );
 
+    -- 14. Compliance: GCP
     CREATE TABLE IF NOT EXISTS compliance_gcp_icmr (
       id SERIAL PRIMARY KEY,
       rule_domain TEXT NOT NULL,
@@ -169,6 +182,7 @@ async function initSchema(client: any) {
       status VARCHAR(50) DEFAULT 'Fully Compliant'
     );
 
+    -- 15. Compliance: NDCT
     CREATE TABLE IF NOT EXISTS compliance_ndct_rules (
       id SERIAL PRIMARY KEY,
       rule_section VARCHAR(50) NOT NULL,
@@ -179,6 +193,7 @@ async function initSchema(client: any) {
       status VARCHAR(50) DEFAULT 'Statutory Approved'
     );
 
+    -- 16. Compliance: Audits
     CREATE TABLE IF NOT EXISTS compliance_audits (
       id SERIAL PRIMARY KEY,
       audit_code VARCHAR(50) UNIQUE NOT NULL,
@@ -190,6 +205,7 @@ async function initSchema(client: any) {
       capa_status VARCHAR(50) DEFAULT 'CAPA Closed'
     );
 
+    -- 17. Interoperability: CDISC
     CREATE TABLE IF NOT EXISTS interop_cdisc_datasets (
       id SERIAL PRIMARY KEY,
       domain_code VARCHAR(20) NOT NULL,
@@ -201,6 +217,7 @@ async function initSchema(client: any) {
       define_xml_status VARCHAR(50) DEFAULT 'Define-XML v2.1 Verified'
     );
 
+    -- 18. Interoperability: FHIR
     CREATE TABLE IF NOT EXISTS interop_fhir_endpoints (
       id SERIAL PRIMARY KEY,
       resource_type VARCHAR(50) NOT NULL,
@@ -212,6 +229,7 @@ async function initSchema(client: any) {
       health_status VARCHAR(50) DEFAULT 'Connected (200 OK)'
     );
 
+    -- 19. Interoperability: ABDM
     CREATE TABLE IF NOT EXISTS interop_abdm_registry (
       id SERIAL PRIMARY KEY,
       subject_id VARCHAR(50) NOT NULL,
@@ -222,62 +240,49 @@ async function initSchema(client: any) {
       gateway_sync_status VARCHAR(50) DEFAULT 'ABDM Gateway Synced',
       linked_date DATE DEFAULT CURRENT_DATE
     );
+
+    -- 20. ADMINISTRATION: Users & Roles (RBAC 21 CFR Part 11)
+    CREATE TABLE IF NOT EXISTS admin_users_roles (
+      id SERIAL PRIMARY KEY,
+      user_code VARCHAR(50) UNIQUE NOT NULL,
+      full_name TEXT NOT NULL,
+      email VARCHAR(120) UNIQUE NOT NULL,
+      role_title VARCHAR(80) NOT NULL,
+      access_scope TEXT NOT NULL,
+      mfa_status VARCHAR(20) DEFAULT 'Enforced (FIDO2)',
+      account_status VARCHAR(30) DEFAULT 'Active (Authorized)',
+      last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- 21. ADMINISTRATION: System Settings & Audit Log
+    CREATE TABLE IF NOT EXISTS admin_system_audit_logs (
+      id SERIAL PRIMARY KEY,
+      event_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      user_identity VARCHAR(100) NOT NULL,
+      action_type VARCHAR(50) NOT NULL,
+      resource_affected TEXT NOT NULL,
+      ip_address VARCHAR(50) DEFAULT '10.14.0.22 (AIIA VPN)',
+      compliance_flag VARCHAR(50) DEFAULT '21 CFR Part 11 Verified'
+    );
   `);
 
-  // 2. Individual Safe Seed Check (Har table ka apna count check)
-
-  // CDISC SEED CHECK
-  const cdiscCnt = await client.query('SELECT count(*) FROM interop_cdisc_datasets');
-  if (parseInt(cdiscCnt.rows[0].count, 10) === 0) {
+  // Auto-seed Administration tables if empty
+  const userCnt = await client.query('SELECT count(*) FROM admin_users_roles');
+  if (parseInt(userCnt.rows[0].count, 10) === 0) {
     await client.query(`
-      INSERT INTO interop_cdisc_datasets (domain_code, domain_name, standard_type, total_records, validation_status, export_format, define_xml_status) VALUES
-      ('DM', 'Demographics & Prakriti Phenotype', 'SDTM v3.4', 1085, '100% CDISC Compliant', 'SAS Transport (XPT v5)', 'Define-XML v2.1 Passed'),
-      ('AE', 'Adverse Events & ADR Matrix', 'SDTM v3.4', 38, '100% CDISC Compliant', 'SAS Transport (XPT v5)', 'Define-XML v2.1 Passed'),
-      ('LB', 'Laboratory Biomarkers (AyurBio)', 'SDTM v3.4', 4210, '99.8% Compliant', 'SAS Transport (XPT v5)', 'Define-XML v2.1 Passed'),
-      ('EX', 'Exposure to Investigational Herbal Drug', 'SDTM v3.4', 2140, '100% CDISC Compliant', 'SAS Transport (XPT v5)', 'Define-XML v2.1 Passed'),
-      ('ADSL', 'Subject-Level Analysis Dataset', 'ADaM v1.3', 1085, '100% Validated', 'SAS Transport (XPT v5)', 'Analysis Ready'),
-      ('DS', 'Disposition of Subjects', 'SDTM v3.4', 1085, '100% CDISC Compliant', 'SAS Transport (XPT v5)', 'Define-XML v2.1 Passed'),
-      ('MH', 'Medical History & Prior Morbidities', 'SDTM v3.4', 890, '100% CDISC Compliant', 'SAS Transport (XPT v5)', 'Define-XML v2.1 Passed');
-    `);
-  }
+      INSERT INTO admin_users_roles (user_code, full_name, email, role_title, access_scope, mfa_status, account_status) VALUES
+      ('USR-AIIA-001', 'Dr. Aanchal Singh', 'aanchal.singh@aiia.gov.in', 'Principal Investigator (PI)', 'All Protocols • E-Sign Approvals • DBL Signoff', 'Enforced (FIDO2)', 'Active (Authorized)'),
+      ('USR-AIIA-002', 'Dr. S. K. Raman', 'sk.raman@aiia.gov.in', 'Lead CRA / Clinical Monitor', 'Visits & Monitoring • MVR Logs • Site Access', 'Enforced (SMS OTP)', 'Active (Authorized)'),
+      ('USR-AIIA-003', 'Pooja Verma', 'p.verma@aiia.gov.in', 'Clinical Data Manager', 'eCRF Queries • Database Lock (DBL) • CDISC', 'Enforced (Authenticator)', 'Active (Authorized)'),
+      ('USR-AIIA-004', 'Dr. Ananya Joshi', 'a.joshi@aiia.gov.in', 'Pharmacovigilance Officer (NPvCC)', 'ADR / SAE Reporting • PvPI Gateway • Signal Detection', 'Enforced (FIDO2)', 'Active (Authorized)'),
+      ('USR-AIIA-005', 'Rajesh K. Meena', 'r.meena@cdsco.nic.in', 'Regulatory Inspector (CDSCO)', 'Read-Only Audit Trail • Dossier Inspection', 'Enforced (Gov.in PKI)', 'Active (Authorized)');
 
-  // FHIR SEED CHECK
-  const fhirCnt = await client.query('SELECT count(*) FROM interop_fhir_endpoints');
-  if (parseInt(fhirCnt.rows[0].count, 10) === 0) {
-    await client.query(`
-      INSERT INTO interop_fhir_endpoints (resource_type, endpoint_path, fhir_version, http_methods, sync_frequency, records_synced, health_status) VALUES
-      ('ResearchStudy', '/fhir/R4/ResearchStudy', 'R4 (v4.0.1)', 'GET, POST', 'Continuous Webhook', 5, 'Connected (200 OK)'),
-      ('ResearchSubject', '/fhir/R4/ResearchSubject', 'R4 (v4.0.1)', 'GET, POST, PUT', 'Continuous Webhook', 985, 'Connected (200 OK)'),
-      ('Observation', '/fhir/R4/Observation?category=laboratory', 'R4 (v4.0.1)', 'GET, POST', 'Batch Sync (Hourly)', 4210, 'Connected (200 OK)'),
-      ('Condition', '/fhir/R4/Condition?code=ICD-11', 'R4 (v4.0.1)', 'GET', 'Real-time', 1240, 'Connected (200 OK)'),
-      ('MedicationStatement', '/fhir/R4/MedicationStatement', 'R4 (v4.0.1)', 'GET, POST', 'Daily Reconciliation', 2140, 'Connected (200 OK)');
-    `);
-  }
-
-  // ABDM SEED CHECK
-  const abdmCnt = await client.query('SELECT count(*) FROM interop_abdm_registry');
-  if (parseInt(abdmCnt.rows[0].count, 10) === 0) {
-    await client.query(`
-      INSERT INTO interop_abdm_registry (subject_id, abha_number, abha_address, hip_facility_id, consent_artefact_id, gateway_sync_status, linked_date) VALUES
-      ('SUBJ-AIIA-0101', '91-4821-3940-1284', 'patient0101@sbx', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90412', 'ABDM Gateway Synced', '2026-05-12'),
-      ('SUBJ-AIIA-0102', '91-2391-4890-5912', 'rajesh.sharma@abdm', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90413', 'ABDM Gateway Synced', '2026-05-24'),
-      ('SUBJ-AIIA-0205', '91-8841-0294-8192', 'meena.gupta@abdm', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90414', 'ABDM Gateway Synced', '2026-06-03'),
-      ('SUBJ-AIIA-0310', '91-5519-3910-4819', 'sunil.kumar@sbx', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90415', 'ABDM Gateway Synced', '2026-07-15'),
-      ('SUBJ-AIIA-0402', '91-9923-4819-2041', 'anita.devi@abdm', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90416', 'ABDM Gateway Synced', '2026-08-02'),
-      ('SUBJ-AIIA-0405', '91-7712-9901-4412', 'vikram.singh@abdm', 'IN0710001004 (AIIA New Delhi)', 'ART-ABDM-2026-90417', 'ABDM Gateway Synced', '2026-08-19');
-    `);
-  }
-
-  // CTRI SEED CHECK
-  const ctriCnt = await client.query('SELECT count(*) FROM compliance_ctri');
-  if (parseInt(ctriCnt.rows[0].count, 10) === 0) {
-    await client.query(`
-      INSERT INTO compliance_ctri (study_id, ctri_reg_no, who_ictrp_synced, reg_date, next_annual_update_due, primary_sponsor, recruitment_status, verification_status) VALUES
-      ('AIIA-CT-001', 'CTRI/2025/03/048912', 'Yes (Live)', '2025-03-14', '2027-03-14', 'All India Institute of Ayurveda, New Delhi', 'Open to Recruitment', 'CTRI Verified'),
-      ('AIIA-CT-002', 'CTRI/2025/08/059124', 'Yes (Live)', '2025-08-02', '2027-08-02', 'Ministry of Ayush / AIIA Research Fund', 'Open to Recruitment', 'CTRI Verified'),
-      ('AIIA-CT-003', 'CTRI/2025/05/051280', 'Yes (Live)', '2025-05-18', '2026-11-18', 'AIIA Collaborative Research Consortium', 'Temporarily Suspended', 'Audit Flag'),
-      ('AIIA-CT-004', 'CTRI/2025/09/061299', 'Yes (Live)', '2025-09-10', '2027-09-10', 'National Medicinal Plants Board (NMPB)', 'Open to Recruitment', 'CTRI Verified'),
-      ('AIIA-CT-005', 'CTRI/2026/01/072111', 'Pending Push', '2026-01-22', '2027-01-22', 'All India Institute of Ayurveda', 'Not Yet Recruiting', 'Provisional Cleared');
+      INSERT INTO admin_system_audit_logs (user_identity, action_type, resource_affected, ip_address, compliance_flag) VALUES
+      ('Dr. Aanchal Singh (PI)', 'ELECTRONIC_SIGNATURE', 'Protocol Dossier AIIA-CT-001 Approval', '10.14.0.22', '21 CFR Part 11 Verified'),
+      ('Pooja Verma (Data Mgr)', 'DATABASE_QUERY_RESOLVE', 'eCRF Query QRY-0841 Closed', '10.14.0.38', 'Audit Trail Logged'),
+      ('Dr. Ananya Joshi (PV)', 'ADR_EXPEDITED_SUBMIT', 'SAE Report PV-AIIA-2026-004 to CDSCO Portal', '10.14.0.19', 'PvPI Certified'),
+      ('System Daemon (ABDM)', 'GATEWAY_HEALTH_CHECK', 'NHA Sandbox M1/M2/M3 Sync', '127.0.0.1', 'NHA Timestamp Verified'),
+      ('Rajesh K. Meena (Inspector)', 'REGULATORY_AUDIT_INSPECT', 'Trial Master File (TMF) Export', '164.100.24.12', 'Immutable Record');
     `);
   }
 }
@@ -371,7 +376,7 @@ export async function GET(req: Request) {
         data.auditList = res.rows;
       }
 
-      // DATA & INTEROPERABILITY (Direct Neon Queries)
+      // DATA & INTEROPERABILITY
       if (tab === 'cdisc' || tab === 'all') {
         const res = await client.query('SELECT * FROM interop_cdisc_datasets ORDER BY id ASC');
         data.cdiscList = res.rows;
@@ -383,6 +388,16 @@ export async function GET(req: Request) {
       if (tab === 'abdm' || tab === 'all') {
         const res = await client.query('SELECT * FROM interop_abdm_registry ORDER BY id ASC');
         data.abdmList = res.rows;
+      }
+
+      // ADMINISTRATION
+      if (tab === 'users' || tab === 'all') {
+        const res = await client.query('SELECT * FROM admin_users_roles ORDER BY id ASC');
+        data.usersList = res.rows;
+      }
+      if (tab === 'settings' || tab === 'all') {
+        const res = await client.query('SELECT * FROM admin_system_audit_logs ORDER BY id DESC LIMIT 15');
+        data.auditLogs = res.rows;
       }
 
       return NextResponse.json({ success: true, source: 'neon_postgres', data });
