@@ -159,7 +159,7 @@ export default function FullDashboardPage() {
             />
           ) : (
             <>
-              {/* Doctor Welcome Banner */}
+              {/* Doctor Welcome Banner with Specialized Medical Profile */}
               <div className={`rounded-xl p-4 flex justify-between items-center shadow-lg transition-all duration-300 border ${
                 darkMode
                   ? 'bg-gradient-to-r from-[#111e33] via-[#132c45] to-[#0d1c2c] border-cyan-500/30 text-white shadow-cyan-950/40'
@@ -170,34 +170,33 @@ export default function FullDashboardPage() {
                     darkMode ? 'border-cyan-400 shadow-cyan-500/40 bg-slate-900' : 'border-emerald-300 bg-emerald-950'
                   }`}>
                     <img
-                      src={currentUser.avatarUrl || '/doctor.jpg'}
-                      alt={currentUser.fullName}
+                      src={currentUser?.avatarUrl || '/doctor.jpg'}
+                      alt={currentUser?.fullName || 'Clinical Investigator'}
                       className="w-full h-full object-cover object-top"
-                      onError={(e: any) => { e.target.src = '/doctor.jpg'; }}
                     />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h1 className="text-base font-extrabold text-white tracking-tight">Welcome, {currentUser.fullName}</h1>
+                      <h1 className="text-base font-extrabold text-white tracking-tight">Welcome, {currentUser?.fullName}</h1>
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                         darkMode ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-emerald-400/20 text-emerald-200'
                       }`}>
-                        {currentUser.roleTitle}
+                        {currentUser?.roleTitle}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 mt-0.5 text-xs font-semibold text-emerald-200">
                       <GraduationCap className="w-3.5 h-3.5 text-amber-300 shrink-0"/>
-                      <span>{currentUser.degrees || 'BAMS, MD (Ayurveda)'}</span>
+                      <span>{currentUser?.degrees || 'BAMS, MD (Ayurveda)'}</span>
                       <span className="text-slate-400">•</span>
-                      <span className="text-cyan-300 text-[11px] font-mono">Reg: {currentUser.councilRegNo || 'AYUSH-COUNCIL-VERIFIED'}</span>
+                      <span className="text-cyan-300 text-[11px] font-mono">Reg: {currentUser?.councilRegNo || 'AYUSH-COUNCIL-VERIFIED'}</span>
                     </div>
 
                     <p className={`text-[10px] mt-0.5 font-medium ${darkMode ? 'text-slate-300' : 'text-emerald-100'}`}>
-                      {currentUser.department || 'All India Institute of Ayurveda (AIIA)'}
+                      {currentUser?.department || 'All India Institute of Ayurveda (AIIA)'}
                     </p>
                     <p className={`text-[10px] font-bold ${darkMode ? 'text-cyan-400' : 'text-emerald-200'}`}>
-                      Specialization: {currentUser.specialization || 'Clinical Research & Pharmacovigilance'}
+                      Specialization: {currentUser?.specialization || 'Clinical Research & Pharmacovigilance'}
                     </p>
                   </div>
                 </div>
