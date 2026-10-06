@@ -6,7 +6,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Real Authorized Medical Investigators Directory
+// Unique institutional avatars for each authorized professional
 const AUTHORIZED_INVESTIGATORS: Record<string, {
   pass: string;
   name: string;
@@ -27,16 +27,6 @@ const AUTHORIZED_INVESTIGATORS: Record<string, {
     councilRegNo: 'DBCP/2018/AY-48912',
     avatarUrl: '/doctor.jpg'
   },
-  'sk.raman@aiia.gov.in': {
-    pass: 'Cra@2026#Monitor',
-    name: 'Dr. S. K. Raman',
-    role: 'Lead CRA / Clinical Monitor',
-    degrees: 'MBBS, MD (Pharmacology), PGDCR (Clinical Trials)',
-    specialization: 'Clinical Monitoring, GCP-ASU & Protocol Quality Oversight',
-    department: 'Centre for Good Clinical Practice, AIIA',
-    councilRegNo: 'MCI/2012/MED-39014',
-    avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80'
-  },
   'ananya.joshi@aiia.gov.in': {
     pass: 'Pv@2026#Officer',
     name: 'Dr. Ananya Joshi',
@@ -45,7 +35,17 @@ const AUTHORIZED_INVESTIGATORS: Record<string, {
     specialization: 'Herbal Safety Surveillance, WHO-UMC Causality & MedDRA',
     department: 'National Pharmacovigilance Centre for ASU Drugs (NPvCC)',
     councilRegNo: 'UPBC/2016/AY-77218',
-    avatarUrl: 'https://images.unsplash.com/photo-1594824813576-9630e2270929?w=150&auto=format&fit=crop&q=80'
+    avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=250&auto=format&fit=crop&q=80'
+  },
+  'sk.raman@aiia.gov.in': {
+    pass: 'Cra@2026#Monitor',
+    name: 'Dr. S. K. Raman',
+    role: 'Lead CRA / Clinical Monitor',
+    degrees: 'MBBS, MD (Pharmacology), PGDCR (Clinical Trials)',
+    specialization: 'Clinical Monitoring, GCP-ASU & Protocol Quality Oversight',
+    department: 'Centre for Good Clinical Practice, AIIA',
+    councilRegNo: 'MCI/2012/MED-39014',
+    avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=250&auto=format&fit=crop&q=80'
   },
   'r.meena@cdsco.nic.in': {
     pass: 'Cdsco@2026#Auditor',
@@ -54,99 +54,148 @@ const AUTHORIZED_INVESTIGATORS: Record<string, {
     degrees: 'M.Pharm (Regulatory Affairs), ISO 9001 Lead Auditor',
     specialization: 'NDCT Rules 2019, GCP-ASU Inspections & 21 CFR Part 11',
     department: 'Central Drugs Standard Control Organisation (CDSCO), North Zone',
-    councilRegNo: 'CDSCO/GOI/AUD-9022',
-    avatarUrl: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80'
-  }
-};
+    councilRegNo: 'CDSCO
+cat << 'EOF' > src/components/layout/TopNav.tsx
+'use client';
 
-export async function POST(req: Request) {
-  try {
-    const { email, password } = await req.json();
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Search, Bell, Sun, Moon, LogOut } from 'lucide-react';
 
-    if (!email || !password) {
-      return NextResponse.json({ success: false, error: 'Email and password are required' }, { status: 400 });
-    }
+interface TopNavProps {
+  darkMode?: boolean;
+  setDarkMode?: (val: boolean | ((prev: boolean) => boolean)) => void;
+}
 
-    const cleanEmail = email.trim().toLowerCase();
-    const investigator = AUTHORIZED_INVESTIGATORS[cleanEmail];
+export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<any>({
+    fullName: 'Dr. Aanchal Singh',
+    roleTitle: 'Principal Investigator (PI)',
+    avatarUrl: '/doctor.jpg'
+  });
 
-    if (!investigator || investigator.pass !== password) {
-      return NextResponse.json({
-        success: false,
-        error: 'Access Denied: Unrecognized medical credentials or unauthorized account.'
-      }, { status: 401 });
-    }
-
-    // Persist real investigator profile to Neon PostgreSQL
-    try {
-      const client = await pool.connect();
+  useEffect(() => {
+    const stored = localStorage.getItem('aiia_auth_user');
+    if (stored) {
       try {
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS system_credentials (
-            id SERIAL PRIMARY KEY,
-            email VARCHAR(120) UNIQUE NOT NULL,
-            full_name VARCHAR(100) NOT NULL,
-            role_title VARCHAR(80) NOT NULL,
-            degrees VARCHAR(150),
-            specialization TEXT,
-            department TEXT,
-            council_reg_no VARCHAR(100),
-            avatar_url TEXT,
-            last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-          );
-        `);
-
-        await client.query(`
-          INSERT INTO system_credentials (email, full_name, role_title, degrees, specialization, department, council_reg_no, avatar_url, last_login)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
-          ON CONFLICT (email) DO UPDATE SET
-            last_login = CURRENT_TIMESTAMP,
-            degrees = EXCLUDED.degrees,
-            specialization = EXCLUDED.specialization,
-            department = EXCLUDED.department,
-            council_reg_no = EXCLUDED.council_reg_no;
-        `, [
-          cleanEmail,
-          investigator.name,
-          investigator.role,
-          investigator.degrees,
-          investigator.specialization,
-          investigator.department,
-          investigator.councilRegNo,
-          investigator.avatarUrl
-        ]);
-      } finally {
-        client.release();
+        const parsed = JSON.parse(stored);
+        if (parsed.fullName) setCurrentUser(parsed);
+      } catch (e) {
+        console.error(e);
       }
-    } catch (dbErr) {
-      console.warn("Neon auth table log warning:", dbErr);
     }
+  }, []);
 
-    const userPayload = {
-      email: cleanEmail,
-      fullName: investigator.name,
-      roleTitle: investigator.role,
-      degrees: investigator.degrees,
-      specialization: investigator.specialization,
-      department: investigator.department,
-      councilRegNo: investigator.councilRegNo,
-      avatarUrl: investigator.avatarUrl
-    };
+  const handleLogout = () => {
+    localStorage.removeItem('aiia_auth_user');
+    document.cookie = 'aiia_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    router.push('/login');
+  };
 
-    const response = NextResponse.json({
-      success: true,
-      user: userPayload
-    });
+  return (
+    <header className={`h-14 border-b px-5 flex items-center justify-between select-none shadow-sm transition-colors duration-300 z-10 ${
+      darkMode ? 'bg-[#0f172a] border-slate-800 text-slate-100' : 'bg-white border-slate-200/90 text-slate-800'
+    }`}>
+      {/* Left: System Title & Sub-tagline */}
+      <div className="flex flex-col">
+        <h1 className={`text-sm font-extrabold tracking-tight leading-tight ${
+          darkMode ? 'text-white' : 'text-slate-900'
+        }`}>
+          Clinical Trials Management System
+        </h1>
+        <p className={`text-[10px] font-semibold ${
+          darkMode ? 'text-cyan-400' : 'text-emerald-700'
+        }`}>
+          Evidence • Safety • Ayurveda • Global Impact
+        </p>
+      </div>
 
-    response.cookies.set('aiia_session', Buffer.from(JSON.stringify(userPayload)).toString('base64'), {
-      httpOnly: false,
-      path: '/',
-      maxAge: 60 * 60 * 12, // 12 Hours
-      sameSite: 'lax'
-    });
+      {/* Center: Search Bar */}
+      <div className="flex-1 max-w-md mx-6">
+        <div className="relative flex items-center">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none"/>
+          <input
+            type="text"
+            placeholder="Search studies, patients, sites, or reports (Ctrl + K)"
+            className={`w-full border rounded-lg pl-8 pr-14 py-1.5 text-xs focus:outline-none transition shadow-sm ${
+              darkMode
+                ? 'bg-[#1e293b] border-slate-700 text-slate-100 placeholder-slate-400 focus:border-cyan-400'
+                : 'bg-slate-100 border-slate-300 text-slate-800 placeholder-slate-400 focus:border-emerald-600 focus:bg-white'
+            }`}
+          />
+          <kbd className={`absolute right-2.5 px-1.5 py-0.5 text-[9px] font-mono rounded ${
+            darkMode ? 'text-cyan-300 bg-slate-800 border border-slate-700' : 'text-slate-600 bg-white border border-slate-300'
+          }`}>
+            Ctrl + K
+          </kbd>
+        </div>
+      </div>
 
-    return response;
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
+      {/* Right: Theme Toggle, Notifications, Doctor Profile & Logout */}
+      <div className="flex items-center gap-3">
+        {setDarkMode && (
+          <button
+            type="button"
+            onClick={() => setDarkMode((prev) => !prev)}
+            aria-label="Toggle theme"
+            className={`p-2 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold shadow-xs ${
+              darkMode
+                ? 'bg-[#1e293b] text-amber-300 hover:bg-[#334155] border border-slate-700'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
+            }`}
+            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {darkMode ? <Sun className="w-4 h-4 text-amber-400"/> : <Moon className="w-4 h-4 text-slate-700"/>}
+          </button>
+        )}
+
+        <button
+          type="button"
+          aria-label="View notifications"
+          className={`relative p-2 rounded-lg transition cursor-pointer border ${
+            darkMode ? 'text-slate-300 hover:text-white bg-[#1e293b] hover:bg-[#334155] border-slate-700' : 'text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border-slate-300'
+          }`}
+        >
+          <Bell className="w-4 h-4"/>
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-slate-900"></span>
+        </button>
+
+        {/* Doctor Profile Info with Dynamic Avatar */}
+        <div className={`flex items-center gap-2.5 pl-3 border-l ${
+          darkMode ? 'border-slate-800' : 'border-slate-300'
+        }`}>
+          <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-emerald-500 shadow-sm flex-shrink-0 bg-slate-800">
+            <img
+              src={currentUser.avatarUrl || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=250&auto=format&fit=crop&q=80'}
+              alt={currentUser.fullName}
+              className="w-full h-full object-cover object-top"
+            />
+          </div>
+          <div className="text-right">
+            <div className={`text-xs font-bold leading-tight ${
+              darkMode ? 'text-white' : 'text-slate-900'
+            }`}>
+              {currentUser.fullName}
+            </div>
+            <div className={`text-[10px] font-bold ${
+              darkMode ? 'text-cyan-400' : 'text-emerald-700'
+            }`}>
+              {currentUser.roleTitle}
+            </div>
+          </div>
+        </div>
+
+        {/* Secure Sign Out Button */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          title="Secure Sign Out"
+          className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition cursor-pointer ml-1"
+        >
+          <LogOut className="w-4 h-4"/>
+        </button>
+      </div>
+    </header>
+  );
 }
