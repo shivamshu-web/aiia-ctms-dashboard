@@ -83,6 +83,7 @@ export async function POST(req: Request) {
           CREATE TABLE IF NOT EXISTS system_credentials (
             id SERIAL PRIMARY KEY,
             email VARCHAR(120) UNIQUE NOT NULL,
+            password_hash VARCHAR(100),
             full_name VARCHAR(100) NOT NULL,
             role_title VARCHAR(80) NOT NULL,
             degrees VARCHAR(150),
@@ -94,18 +95,23 @@ export async function POST(req: Request) {
           );
         `);
 
+        // Force insert/update so Dr. Ananya Joshi is guaranteed to be in Neon
         await client.query(`
-          INSERT INTO system_credentials (email, full_name, role_title, degrees, specialization, department, council_reg_no, avatar_url, last_login)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+          INSERT INTO system_credentials (email, password_hash, full_name, role_title, degrees, specialization, department, council_reg_no, avatar_url, last_login)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
           ON CONFLICT (email) DO UPDATE SET
-            last_login = CURRENT_TIMESTAMP,
-            avatar_url = EXCLUDED.avatar_url,
+            password_hash = EXCLUDED.password_hash,
+            full_name = EXCLUDED.full_name,
+            role_title = EXCLUDED.role_title,
             degrees = EXCLUDED.degrees,
             specialization = EXCLUDED.specialization,
             department = EXCLUDED.department,
-            council_reg_no = EXCLUDED.council_reg_no;
+            council_reg_no = EXCLUDED.council_reg_no,
+            avatar_url = EXCLUDED.avatar_url,
+            last_login = CURRENT_TIMESTAMP;
         `, [
           cleanEmail,
+          investigator.pass,
           investigator.name,
           investigator.role,
           investigator.degrees,
@@ -118,7 +124,7 @@ export async function POST(req: Request) {
         client.release();
       }
     } catch (dbErr) {
-      console.warn("Neon auth table update warning:", dbErr);
+      console.warn("Neon credentials sync warning:", dbErr);
     }
 
     const userPayload = {
