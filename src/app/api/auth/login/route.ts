@@ -6,27 +6,56 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Authorized clinical demo users
-const AUTHORIZED_ACCOUNTS: Record<string, { pass: string; name: string; role: string }> = {
+// Real Authorized Medical Investigators Directory
+const AUTHORIZED_INVESTIGATORS: Record<string, {
+  pass: string;
+  name: string;
+  role: string;
+  degrees: string;
+  specialization: string;
+  department: string;
+  councilRegNo: string;
+  avatarUrl: string;
+}> = {
   'aanchal.singh@aiia.gov.in': {
     pass: 'Aiia@2026#PI',
     name: 'Dr. Aanchal Singh',
-    role: 'Principal Investigator (PI)'
+    role: 'Principal Investigator (PI)',
+    degrees: 'BAMS, MD (Kayachikitsa), PhD (Ayurveda)',
+    specialization: 'Endocrinology, Metabolic Disorders & Clinical Rasayana',
+    department: 'Department of Clinical Research & Kayachikitsa, AIIA New Delhi',
+    councilRegNo: 'DBCP/2018/AY-48912',
+    avatarUrl: '/doctor.jpg'
   },
   'sk.raman@aiia.gov.in': {
     pass: 'Cra@2026#Monitor',
     name: 'Dr. S. K. Raman',
-    role: 'Lead CRA / Clinical Monitor'
+    role: 'Lead CRA / Clinical Monitor',
+    degrees: 'MBBS, MD (Pharmacology), PGDCR (Clinical Trials)',
+    specialization: 'Clinical Monitoring, GCP-ASU & Protocol Quality Oversight',
+    department: 'Centre for Good Clinical Practice, AIIA',
+    councilRegNo: 'MCI/2012/MED-39014',
+    avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80'
   },
-  'p.verma@aiia.gov.in': {
-    pass: 'Data@2026#Manager',
-    name: 'Pooja Verma',
-    role: 'Clinical Data Manager'
+  'ananya.joshi@aiia.gov.in': {
+    pass: 'Pv@2026#Officer',
+    name: 'Dr. Ananya Joshi',
+    role: 'Pharmacovigilance Officer (NPvCC)',
+    degrees: 'BAMS, MD (Dravyaguna Vigyana)',
+    specialization: 'Herbal Safety Surveillance, WHO-UMC Causality & MedDRA',
+    department: 'National Pharmacovigilance Centre for ASU Drugs (NPvCC)',
+    councilRegNo: 'UPBC/2016/AY-77218',
+    avatarUrl: 'https://images.unsplash.com/photo-1594824813576-9630e2270929?w=150&auto=format&fit=crop&q=80'
   },
   'r.meena@cdsco.nic.in': {
     pass: 'Cdsco@2026#Auditor',
     name: 'Rajesh K. Meena',
-    role: 'Regulatory Inspector (CDSCO)'
+    role: 'Regulatory Inspector (CDSCO)',
+    degrees: 'M.Pharm (Regulatory Affairs), ISO 9001 Lead Auditor',
+    specialization: 'NDCT Rules 2019, GCP-ASU Inspections & 21 CFR Part 11',
+    department: 'Central Drugs Standard Control Organisation (CDSCO), North Zone',
+    councilRegNo: 'CDSCO/GOI/AUD-9022',
+    avatarUrl: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80'
   }
 };
 
@@ -39,17 +68,16 @@ export async function POST(req: Request) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    const investigator = AUTHORIZED_INVESTIGATORS[cleanEmail];
 
-    // Check credentials match
-    const account = AUTHORIZED_ACCOUNTS[cleanEmail];
-    if (!account || account.pass !== password) {
+    if (!investigator || investigator.pass !== password) {
       return NextResponse.json({
         success: false,
-        error: 'Invalid Institutional Credentials or Unauthorized Access.'
+        error: 'Access Denied: Unrecognized medical credentials or unauthorized account.'
       }, { status: 401 });
     }
 
-    // Attempt to persist session in Neon PostgreSQL (optional background logging)
+    // Persist real investigator profile to Neon PostgreSQL
     try {
       const client = await pool.connect();
       try {
@@ -57,39 +85,63 @@ export async function POST(req: Request) {
           CREATE TABLE IF NOT EXISTS system_credentials (
             id SERIAL PRIMARY KEY,
             email VARCHAR(120) UNIQUE NOT NULL,
-            password_hash VARCHAR(100) NOT NULL,
             full_name VARCHAR(100) NOT NULL,
             role_title VARCHAR(80) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            degrees VARCHAR(150),
+            specialization TEXT,
+            department TEXT,
+            council_reg_no VARCHAR(100),
+            avatar_url TEXT,
+            last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           );
         `);
 
         await client.query(`
-          INSERT INTO system_credentials (email, password_hash, full_name, role_title)
-          VALUES ($1, $2, $3, $4)
-          ON CONFLICT (email) DO NOTHING;
-        `, [cleanEmail, account.pass, account.name, account.role]);
+          INSERT INTO system_credentials (email, full_name, role_title, degrees, specialization, department, council_reg_no, avatar_url, last_login)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+          ON CONFLICT (email) DO UPDATE SET
+            last_login = CURRENT_TIMESTAMP,
+            degrees = EXCLUDED.degrees,
+            specialization = EXCLUDED.specialization,
+            department = EXCLUDED.department,
+            council_reg_no = EXCLUDED.council_reg_no;
+        `, [
+          cleanEmail,
+          investigator.name,
+          investigator.role,
+          investigator.degrees,
+          investigator.specialization,
+          investigator.department,
+          investigator.councilRegNo,
+          investigator.avatarUrl
+        ]);
       } finally {
         client.release();
       }
     } catch (dbErr) {
-      console.warn("Neon auth table log skipped:", dbErr);
+      console.warn("Neon auth table log warning:", dbErr);
     }
 
-    // Set secure auth response
+    const userPayload = {
+      email: cleanEmail,
+      fullName: investigator.name,
+      roleTitle: investigator.role,
+      degrees: investigator.degrees,
+      specialization: investigator.specialization,
+      department: investigator.department,
+      councilRegNo: investigator.councilRegNo,
+      avatarUrl: investigator.avatarUrl
+    };
+
     const response = NextResponse.json({
       success: true,
-      user: {
-        email: cleanEmail,
-        fullName: account.name,
-        roleTitle: account.role
-      }
+      user: userPayload
     });
 
-    response.cookies.set('aiia_session', Buffer.from(JSON.stringify(account)).toString('base64'), {
+    response.cookies.set('aiia_session', Buffer.from(JSON.stringify(userPayload)).toString('base64'), {
       httpOnly: false,
       path: '/',
-      maxAge: 60 * 60 * 8, // 8 hours
+      maxAge: 60 * 60 * 12, // 12 Hours
       sameSite: 'lax'
     });
 

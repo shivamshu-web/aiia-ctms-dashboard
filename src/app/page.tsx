@@ -11,11 +11,13 @@ import {
   FileSpreadsheet,
   Upload,
   CheckCircle,
-  ChevronRight,
-  RotateCcw
+  RotateCcw,
+  GraduationCap,
+  Award,
+  Stethoscope,
+  Building
 } from 'lucide-react';
 
-// Modals & Modules
 import CreateStudyModal from '@/components/CreateStudyModal';
 import AddPatientModal from '@/components/AddPatientModal';
 import ReportSafetyModal from '@/components/ReportSafetyModal';
@@ -28,21 +30,33 @@ export default function FullDashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  // Active navigation tab
   const [activeTab, setActiveTab] = useState('dashboard');
-
-  // Dark Mode State
   const [darkMode, setDarkMode] = useState(false);
-
-  // Live Clock State with proper TypeScript union
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
 
-  // Auth Guard: Check if user is logged in
+  // Active Doctor/User Profile State
+  const [currentUser, setCurrentUser] = useState<any>({
+    fullName: 'Dr. Aanchal Singh',
+    roleTitle: 'Principal Investigator (PI)',
+    degrees: 'BAMS, MD (Kayachikitsa), PhD',
+    specialization: 'Endocrinology, Metabolic Disorders & Clinical Rasayana',
+    department: 'Department of Clinical Research & Kayachikitsa, AIIA',
+    councilRegNo: 'DBCP/2018/AY-48912',
+    avatarUrl: '/doctor.jpg'
+  });
+
+  // Auth Guard
   useEffect(() => {
     const authUser = localStorage.getItem('aiia_auth_user');
     if (!authUser) {
       router.push('/login');
+    } else {
+      try {
+        const parsed = JSON.parse(authUser);
+        if (parsed.fullName) setCurrentUser(parsed);
+      } catch (err) {
+        console.error(err);
+      }
     }
   }, [router]);
 
@@ -147,36 +161,45 @@ export default function FullDashboardPage() {
             />
           ) : (
             <>
-              {/* Welcome Banner */}
+              {/* Dynamic Doctor Welcome Banner with Specialized Medical Profile */}
               <div className={`rounded-xl p-4 flex justify-between items-center shadow-lg transition-all duration-300 border ${
                 darkMode
                   ? 'bg-gradient-to-r from-[#111e33] via-[#132c45] to-[#0d1c2c] border-cyan-500/30 text-white shadow-cyan-950/40'
                   : 'bg-gradient-to-r from-[#044e39] via-[#056349] to-[#0f766e] border-emerald-600/30 text-white shadow-emerald-950/20'
               }`}>
                 <div className="flex items-center gap-3.5">
-                  <div className={`w-12 h-12 rounded-full overflow-hidden border-2 shadow-md flex-shrink-0 ${
+                  <div className={`w-14 h-14 rounded-full overflow-hidden border-2 shadow-md flex-shrink-0 ${
                     darkMode ? 'border-cyan-400 shadow-cyan-500/40 bg-slate-900' : 'border-emerald-300 bg-emerald-950'
                   }`}>
                     <img
-                      src="/doctor.jpg"
-                      alt="Dr. Aanchal Singh"
+                      src={currentUser.avatarUrl || '/doctor.jpg'}
+                      alt={currentUser.fullName}
                       className="w-full h-full object-cover object-top"
+                      onError={(e: any) => { e.target.src = '/doctor.jpg'; }}
                     />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h1 className="text-base font-extrabold text-white tracking-tight">Welcome, Dr. Aanchal Singh</h1>
+                      <h1 className="text-base font-extrabold text-white tracking-tight">Welcome, {currentUser.fullName}</h1>
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                         darkMode ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-emerald-400/20 text-emerald-200'
                       }`}>
-                        Principal Investigator
+                        {currentUser.roleTitle}
                       </span>
                     </div>
-                    <p className={`text-xs font-semibold mt-0.5 ${darkMode ? 'text-slate-300' : 'text-emerald-100'}`}>
-                      All India Institute of Ayurveda (AIIA)
+
+                    <div className="flex items-center gap-2 mt-0.5 text-xs font-semibold text-emerald-200">
+                      <GraduationCap className="w-3.5 h-3.5 text-amber-300 shrink-0"/>
+                      <span>{currentUser.degrees || 'BAMS, MD (Ayurveda)'}</span>
+                      <span className="text-slate-400">•</span>
+                      <span className="text-cyan-300 text-[11px] font-mono">Reg: {currentUser.councilRegNo || 'AYUSH-COUNCIL-VERIFIED'}</span>
+                    </div>
+
+                    <p className={`text-[10px] mt-0.5 font-medium ${darkMode ? 'text-slate-300' : 'text-emerald-100'}`}>
+                      {currentUser.department || 'All India Institute of Ayurveda (AIIA)'}
                     </p>
-                    <p className={`text-[10px] mt-0.5 font-medium ${darkMode ? 'text-cyan-400' : 'text-emerald-200'}`}>
-                      Clinical Research • Pharmacovigilance • Global Health Impact
+                    <p className={`text-[10px] font-bold ${darkMode ? 'text-cyan-400' : 'text-emerald-200'}`}>
+                      Specialization: {currentUser.specialization || 'Clinical Research & Pharmacovigilance'}
                     </p>
                   </div>
                 </div>
@@ -198,7 +221,7 @@ export default function FullDashboardPage() {
                 </div>
               </div>
 
-              {/* 12-Col Grid */}
+              {/* 12-Col Dashboard Grid */}
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-9 space-y-4">
                   <div className="grid grid-cols-6 gap-2.5">

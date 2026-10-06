@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, Sun, Moon, LogOut } from 'lucide-react';
+import { Search, Bell, Sun, Moon, LogOut, Award, Stethoscope } from 'lucide-react';
 
 interface TopNavProps {
   darkMode?: boolean;
@@ -11,6 +11,24 @@ interface TopNavProps {
 
 export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<any>({
+    fullName: 'Dr. Aanchal Singh',
+    roleTitle: 'Principal Investigator (PI)',
+    degrees: 'BAMS, MD (Kayachikitsa)',
+    avatarUrl: '/doctor.jpg'
+  });
+
+  useEffect(() => {
+    const stored = localStorage.getItem('aiia_auth_user');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.fullName) setCurrentUser(parsed);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('aiia_auth_user');
@@ -86,32 +104,33 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-slate-900"></span>
         </button>
 
-        {/* Doctor Profile Info with Photo Avatar */}
+        {/* Dynamic Doctor Profile Header */}
         <div className={`flex items-center gap-2.5 pl-3 border-l ${
           darkMode ? 'border-slate-800' : 'border-slate-300'
         }`}>
           <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-emerald-500 shadow-sm flex-shrink-0 bg-slate-800">
             <img
-              src="/doctor.jpg"
-              alt="Dr. Aanchal Singh"
+              src={currentUser.avatarUrl || '/doctor.jpg'}
+              alt={currentUser.fullName}
               className="w-full h-full object-cover object-top"
+              onError={(e: any) => { e.target.src = '/doctor.jpg'; }}
             />
           </div>
           <div className="text-right">
             <div className={`text-xs font-bold leading-tight ${
               darkMode ? 'text-white' : 'text-slate-900'
             }`}>
-              Dr. Aanchal Singh
+              {currentUser.fullName}
             </div>
             <div className={`text-[10px] font-bold ${
               darkMode ? 'text-cyan-400' : 'text-emerald-700'
             }`}>
-              Principal Investigator
+              {currentUser.roleTitle}
             </div>
           </div>
         </div>
 
-        {/* Sign Out Button */}
+        {/* Secure Sign Out Button */}
         <button
           type="button"
           onClick={handleLogout}

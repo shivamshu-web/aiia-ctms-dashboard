@@ -2,7 +2,42 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Lock, Mail, Loader2, Leaf, KeyRound, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, Loader2, Leaf, KeyRound, AlertCircle, CheckCircle2, Stethoscope, Award, FileBadge } from 'lucide-react';
+
+const AUTHORIZED_INVESTIGATORS = [
+  {
+    name: 'Dr. Aanchal Singh',
+    email: 'aanchal.singh@aiia.gov.in',
+    pass: 'Aiia@2026#PI',
+    role: 'Principal Investigator (PI)',
+    degrees: 'BAMS, MD (Kayachikitsa)',
+    dept: 'Dept of Clinical Research, AIIA'
+  },
+  {
+    name: 'Dr. S. K. Raman',
+    email: 'sk.raman@aiia.gov.in',
+    pass: 'Cra@2026#Monitor',
+    role: 'Lead CRA / Clinical Monitor',
+    degrees: 'MBBS, MD (Pharmacology)',
+    dept: 'GCP Site Monitoring Centre'
+  },
+  {
+    name: 'Dr. Ananya Joshi',
+    email: 'ananya.joshi@aiia.gov.in',
+    pass: 'Pv@2026#Officer',
+    role: 'Pharmacovigilance Officer',
+    degrees: 'BAMS, MD (Dravyaguna)',
+    dept: 'National PV Centre (NPvCC)'
+  },
+  {
+    name: 'Rajesh K. Meena',
+    email: 'r.meena@cdsco.nic.in',
+    pass: 'Cdsco@2026#Auditor',
+    role: 'Regulatory Inspector',
+    degrees: 'M.Pharm (Regulatory Affairs)',
+    dept: 'CDSCO Central Licensing Node'
+  }
+];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,18 +72,17 @@ export default function LoginPage() {
     }
   };
 
-  const setDemoAccount = (uEmail: string, uPass: string) => {
-    setEmail(uEmail);
-    setPassword(uPass);
+  const selectDoctor = (inv: typeof AUTHORIZED_INVESTIGATORS[0]) => {
+    setEmail(inv.email);
+    setPassword(inv.pass);
     setErrorMsg('');
   };
 
   return (
     <div className="min-h-screen w-screen bg-[#07131e] text-slate-100 flex flex-col justify-between font-sans relative overflow-hidden select-none">
-      {/* Background Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      {/* Top Banner */}
+      {/* Header */}
       <header className="p-5 border-b border-slate-800/80 bg-[#0a192c]/60 backdrop-blur-md flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 border border-emerald-400/50 flex items-center justify-center text-white shadow-lg shadow-emerald-950/60">
@@ -61,13 +95,13 @@ export default function LoginPage() {
         </div>
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
           <ShieldCheck className="w-4 h-4 text-emerald-400"/>
-          <span className="hidden sm:inline">21 CFR Part 11 Encrypted Gateway</span>
+          <span className="hidden sm:inline">21 CFR Part 11 Encrypted Clinical Gateway</span>
         </div>
       </header>
 
-      {/* Center Auth Card */}
+      {/* Center Auth Box */}
       <main className="flex-1 flex items-center justify-center p-4 z-10">
-        <div className="w-full max-w-md bg-[#0f1f33] border border-slate-700/80 rounded-2xl p-6 shadow-2xl backdrop-blur-xl space-y-5">
+        <div className="w-full max-w-lg bg-[#0f1f33] border border-slate-700/80 rounded-2xl p-6 shadow-2xl backdrop-blur-xl space-y-5">
           <div className="text-center space-y-1">
             <div className="inline-flex p-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mb-1">
               <KeyRound className="w-6 h-6"/>
@@ -93,7 +127,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@aiia.gov.in"
+                  placeholder="doctor@aiia.gov.in"
                   className="w-full bg-[#162a42] border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-white outline-none focus:border-cyan-400 transition"
                 />
               </div>
@@ -122,7 +156,7 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin"/>
-                  <span>Verifying Credentials...</span>
+                  <span>Verifying Medical Credentials...</span>
                 </>
               ) : (
                 <>
@@ -133,53 +167,41 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick Demo Credentials */}
+          {/* Institutional Directory */}
           <div className="pt-3 border-t border-slate-800 space-y-2">
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">
-              Quick Select Role (Demo Authorization):
-            </span>
+            <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider font-bold">
+              <span className="flex items-center gap-1.5 text-cyan-300">
+                <Stethoscope className="w-3.5 h-3.5"/>
+                Authorized Clinical Faculty Directory:
+              </span>
+              <span className="text-emerald-400">Click to Select</span>
+            </div>
+
             <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <button
-                type="button"
-                onClick={() => setDemoAccount('aanchal.singh@aiia.gov.in', 'Aiia@2026#PI')}
-                className="p-2 rounded bg-[#162a42] hover:bg-[#1f3a5c] text-left border border-slate-700/60 transition cursor-pointer"
-              >
-                <div className="font-bold text-cyan-300">Dr. Aanchal Singh</div>
-                <div className="text-[9px] text-slate-400">Principal Investigator</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setDemoAccount('sk.raman@aiia.gov.in', 'Cra@2026#Monitor')}
-                className="p-2 rounded bg-[#162a42] hover:bg-[#1f3a5c] text-left border border-slate-700/60 transition cursor-pointer"
-              >
-                <div className="font-bold text-emerald-300">Dr. S. K. Raman</div>
-                <div className="text-[9px] text-slate-400">Clinical Monitor (CRA)</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setDemoAccount('p.verma@aiia.gov.in', 'Data@2026#Manager')}
-                className="p-2 rounded bg-[#162a42] hover:bg-[#1f3a5c] text-left border border-slate-700/60 transition cursor-pointer"
-              >
-                <div className="font-bold text-purple-300">Pooja Verma</div>
-                <div className="text-[9px] text-slate-400">Data Manager</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setDemoAccount('r.meena@cdsco.nic.in', 'Cdsco@2026#Auditor')}
-                className="p-2 rounded bg-[#162a42] hover:bg-[#1f3a5c] text-left border border-slate-700/60 transition cursor-pointer"
-              >
-                <div className="font-bold text-amber-300">Rajesh Meena</div>
-                <div className="text-[9px] text-slate-400">CDSCO Inspector</div>
-              </button>
+              {AUTHORIZED_INVESTIGATORS.map((inv) => (
+                <button
+                  key={inv.email}
+                  type="button"
+                  onClick={() => selectDoctor(inv)}
+                  className={`p-2.5 rounded-xl bg-[#162a42] hover:bg-[#1f3a5c] text-left border transition cursor-pointer ${
+                    email.toLowerCase() === inv.email.toLowerCase()
+                      ? 'border-cyan-400 shadow-md shadow-cyan-950/50 ring-1 ring-cyan-400/40'
+                      : 'border-slate-700/60'
+                  }`}
+                >
+                  <div className="font-bold text-white flex items-center justify-between">
+                    <span>{inv.name}</span>
+                    <FileBadge className="w-3 h-3 text-cyan-400"/>
+                  </div>
+                  <div className="text-[10px] text-emerald-400 font-semibold">{inv.degrees}</div>
+                  <div className="text-[9px] text-slate-400 truncate mt-0.5">{inv.role}</div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="p-3 border-t border-slate-800/80 bg-[#07131e] text-center text-[10px] text-slate-500">
         Clinical Trials Management System • Ayush Research & Pharmacovigilance Gateway • ISO/IEC 27001 Certified
       </footer>
