@@ -13,9 +13,7 @@ import {
   CheckCircle,
   RotateCcw,
   GraduationCap,
-  Award,
-  Stethoscope,
-  Building
+  ChevronRight
 } from 'lucide-react';
 
 import CreateStudyModal from '@/components/CreateStudyModal';
@@ -161,7 +159,7 @@ export default function FullDashboardPage() {
             />
           ) : (
             <>
-              {/* Dynamic Doctor Welcome Banner with Specialized Medical Profile */}
+              {/* Doctor Welcome Banner */}
               <div className={`rounded-xl p-4 flex justify-between items-center shadow-lg transition-all duration-300 border ${
                 darkMode
                   ? 'bg-gradient-to-r from-[#111e33] via-[#132c45] to-[#0d1c2c] border-cyan-500/30 text-white shadow-cyan-950/40'
