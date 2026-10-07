@@ -4,28 +4,66 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Lock, Mail, Loader2, Leaf, KeyRound, AlertCircle, CheckCircle2, Stethoscope, FileBadge } from 'lucide-react';
 
+const FALLBACK_USERS = [
+  {
+    user_code: 'USR-AIIA-001',
+    full_name: 'Dr. Aanchal Singh',
+    email: 'aanchal.singh@aiia.gov.in',
+    role_title: 'Principal Investigator (PI)',
+    degrees: 'BAMS, MD (Kayachikitsa), PhD',
+    default_pass: 'Aiia@2026#PI'
+  },
+  {
+    user_code: 'USR-AIIA-002',
+    full_name: 'Dr. S. K. Raman',
+    email: 'sk.raman@aiia.gov.in',
+    role_title: 'Lead CRA / Clinical Monitor',
+    degrees: 'MBBS, MD (Pharmacology), PGDCR',
+    default_pass: 'Cra@2026#Monitor'
+  },
+  {
+    user_code: 'USR-AIIA-003',
+    full_name: 'Pooja Verma',
+    email: 'p.verma@aiia.gov.in',
+    role_title: 'Clinical Data Manager',
+    degrees: 'M.Sc (Biostatistics), CDISC Certified',
+    default_pass: 'Data@2026#Manager'
+  },
+  {
+    user_code: 'USR-AIIA-004',
+    full_name: 'Dr. Ananya Joshi',
+    email: 'ananya.joshi@aiia.gov.in',
+    role_title: 'Pharmacovigilance Officer (NPvCC)',
+    degrees: 'BAMS, MD (Dravyaguna Vigyana)',
+    default_pass: 'Pv@2026#Officer'
+  },
+  {
+    user_code: 'USR-AIIA-005',
+    full_name: 'Rajesh K. Meena',
+    email: 'r.meena@cdsco.nic.in',
+    role_title: 'Regulatory Inspector (CDSCO)',
+    degrees: 'M.Pharm (Regulatory Affairs)',
+    default_pass: 'Cdsco@2026#Auditor'
+  }
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('aanchal.singh@aiia.gov.in');
   const [password, setPassword] = useState('Aiia@2026#PI');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [authorizedList, setAuthorizedList] = useState<any[]>([]);
-  const [fetchingUsers, setFetchingUsers] = useState(true);
+  const [authorizedList, setAuthorizedList] = useState<any[]>(FALLBACK_USERS);
 
-  // Fetch strictly authorized personnel live from Neon SQL
   useEffect(() => {
     fetch('/api/auth/users')
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.users && data.users.length > 0) {
           setAuthorizedList(data.users);
-          setEmail(data.users[0].email);
-          setPassword(data.users[0].default_pass || 'Aiia@2026#PI');
         }
-        setFetchingUsers(false);
       })
-      .catch(() => setFetchingUsers(false));
+      .catch(() => {});
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -149,44 +187,37 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Directory strictly rendered from Neon Database */}
+          {/* Directory rendered with full 5 personnel */}
           <div className="pt-3 border-t border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider font-bold">
               <span className="flex items-center gap-1.5 text-cyan-300">
                 <Stethoscope className="w-3.5 h-3.5"/>
-                Authorized Faculty (Live Neon DB):
+                Authorized Faculty & Investigators ({authorizedList.length} Active):
               </span>
               <span className="text-emerald-400">Click to Select</span>
             </div>
 
-            {fetchingUsers ? (
-              <div className="flex items-center justify-center p-4 gap-2 text-xs text-slate-400">
-                <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
-                <span>Querying Authorized Users from Neon SQL...</span>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                {authorizedList.map((user) => (
-                  <button
-                    key={user.email}
-                    type="button"
-                    onClick={() => selectAuthorizedUser(user)}
-                    className={`p-2.5 rounded-xl bg-[#162a42] hover:bg-[#1f3a5c] text-left border transition cursor-pointer ${
-                      email.toLowerCase() === user.email.toLowerCase()
-                        ? 'border-cyan-400 shadow-md shadow-cyan-950/50 ring-1 ring-cyan-400/40'
-                        : 'border-slate-700/60'
-                    }`}
-                  >
-                    <div className="font-bold text-white flex items-center justify-between">
-                      <span className="truncate">{user.full_name}</span>
-                      <FileBadge className="w-3 h-3 text-cyan-400 shrink-0"/>
-                    </div>
-                    <div className="text-[10px] text-emerald-400 font-semibold truncate">{user.degrees}</div>
-                    <div className="text-[9px] text-slate-400 truncate mt-0.5">{user.role_title}</div>
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              {authorizedList.map((user) => (
+                <button
+                  key={user.email}
+                  type="button"
+                  onClick={() => selectAuthorizedUser(user)}
+                  className={`p-2.5 rounded-xl bg-[#162a42] hover:bg-[#1f3a5c] text-left border transition cursor-pointer ${
+                    email.toLowerCase() === user.email.toLowerCase()
+                      ? 'border-cyan-400 shadow-md shadow-cyan-950/50 ring-1 ring-cyan-400/40'
+                      : 'border-slate-700/60'
+                  }`}
+                >
+                  <div className="font-bold text-white flex items-center justify-between">
+                    <span className="truncate">{user.full_name}</span>
+                    <FileBadge className="w-3 h-3 text-cyan-400 shrink-0"/>
+                  </div>
+                  <div className="text-[10px] text-emerald-400 font-semibold truncate">{user.degrees}</div>
+                  <div className="text-[9px] text-slate-400 truncate mt-0.5">{user.role_title}</div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </main>
