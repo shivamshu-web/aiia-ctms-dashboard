@@ -116,23 +116,14 @@ export default function ModuleViews({
   });
   const [userSubmitting, setUserSubmitting] = useState(false);
 
-  // System Settings State
-  const [sysSettings, setSysSettings] = useState({
-    cfrPart11: true,
-    mfaEnforced: true,
-    sessionTimeout: true,
-    ipLock: true,
-    neonSsl: true
-  });
-
   const fetchNeonData = () => {
     setLoading(true);
     fetch(`/api/clinical-data?tab=${tab}`)
       .then((res) => res.json())
       .then((json) => {
-        if (json.data) {
+        if (json.data && Object.keys(json.data).length > 0) {
           setDbData(json.data);
-        } else if (json.studies) {
+        } else if (json.studies && json.studies.length > 0) {
           setDbData((prev: any) => ({ ...prev, studies: json.studies }));
         }
         setLoading(false);
@@ -147,20 +138,10 @@ export default function ModuleViews({
     fetchNeonData();
   }, [tab]);
 
-  // Robust fallback: agar dbData.studies me 0 ho, toh initialStudies use karein
-  const rawStudies = dbData.studies && dbData.studies.length > 0 ? dbData.studies : (initialStudies && initialStudies.length > 0 ? initialStudies : []);
-
-  // Normalize studies fields (both study_id and studyId support)
-  const studiesList: any[] = rawStudies.map((s: any) => ({
-    ...s,
-    studyId: s.studyId || s.study_id,
-    study_id: s.study_id || s.studyId,
-    sitesCount: s.sitesCount || s.sites_count || 3,
-    ctriNumber: s.ctriNumber || s.ctri_number,
-    therapeuticArea: s.therapeuticArea || s.therapeutic_area || 'Ayurvedic Clinical Protocol',
-    herbalFormulation: s.herbalFormulation || s.herbal_formulation || 'Standardized Herbal Extract',
-    piName: s.piName || s.pi_name || 'Dr. Aanchal Singh'
-  }));
+  // Robust studies dataset
+  const studiesList: any[] = (dbData.studies && dbData.studies.length > 0)
+    ? dbData.studies
+    : ((initialStudies && initialStudies.length > 0) ? initialStudies : []);
 
   const protocolsList: any[] = dbData.protocols || [];
   const sitesList: any[] = dbData.sites || [];
@@ -184,10 +165,13 @@ export default function ModuleViews({
   const auditLogs: any[] = dbData.auditLogs || [];
 
   const filteredStudies = studiesList.filter((s: any) => {
+    const studyTitle = s.title || '';
+    const studyCode = s.studyId || s.study_id || '';
+    const ctriCode = s.ctriNumber || s.ctri_number || '';
     const matchesSearch =
-      (s.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (s.studyId || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (s.ctriNumber || '').toLowerCase().includes(searchQuery.toLowerCase());
+      studyTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      studyCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ctriCode.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPhase = filterPhase === 'ALL' || s.phase === filterPhase;
     return matchesSearch && matchesPhase;
   });
@@ -387,21 +371,21 @@ export default function ModuleViews({
                   <tbody className="divide-y divide-slate-800/80">
                     {filteredStudies.map((s: any) => (
                       <tr key={s.studyId || s.study_id} className="hover:bg-slate-800/50 transition">
-                        <td className="px-3.5 py-3 font-bold text-cyan-400">{s.studyId}</td>
+                        <td className="px-3.5 py-3 font-bold text-cyan-400">{s.studyId || s.study_id}</td>
                         <td className="px-3.5 py-3 text-white font-medium max-w-sm">
                           <div>{s.title}</div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">{s.therapeuticArea}</div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">{s.therapeuticArea || s.therapeutic_area}</div>
                         </td>
                         <td className="px-3.5 py-3">
                           <span className="px-2 py-0.5 rounded bg-blue-950/80 border border-blue-800 text-cyan-300 font-semibold text-[10px]">
                             {s.phase}
                           </span>
                         </td>
-                        <td className="px-3.5 py-3 text-slate-300">{s.sitesCount} Sites</td>
+                        <td className="px-3.5 py-3 text-slate-300">{s.sitesCount || s.sites_count || 3} Sites</td>
                         <td className="px-3.5 py-3 font-semibold text-emerald-400">
                           {s.enrolled} / {s.target}
                         </td>
-                        <td className="px-3.5 py-3 font-mono text-slate-400 text-[10px]">{s.ctriNumber}</td>
+                        <td className="px-3.5 py-3 font-mono text-slate-400 text-[10px]">{s.ctriNumber || s.ctri_number}</td>
                         <td className="px-3.5 py-3">
                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                             s.status === 'Ongoing'
@@ -1482,10 +1466,10 @@ export default function ModuleViews({
             <div className="flex justify-between items-start border-b border-slate-800 pb-3">
               <div>
                 <span className="px-2 py-0.5 rounded bg-blue-500/20 text-cyan-300 font-bold text-xs border border-blue-500/30">
-                  {selectedStudyModal.studyId}
+                  {selectedStudyModal.studyId || selectedStudyModal.study_id}
                 </span>
                 <h3 className="text-base font-bold text-white mt-1.5">{selectedStudyModal.title}</h3>
-                <p className="text-xs text-slate-400">{selectedStudyModal.therapeuticArea}</p>
+                <p className="text-xs text-slate-400">{selectedStudyModal.therapeuticArea || selectedStudyModal.therapeutic_area}</p>
               </div>
               <button
                 onClick={() => setSelectedStudyModal(null)}
@@ -1498,12 +1482,12 @@ export default function ModuleViews({
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="bg-[#18273d] p-3 rounded-lg border border-slate-800">
                 <span className="text-slate-400 block text-[10px] uppercase font-bold">Principal Investigator</span>
-                <span className="text-white font-semibold text-sm">{selectedStudyModal.piName}</span>
+                <span className="text-white font-semibold text-sm">{selectedStudyModal.piName || selectedStudyModal.pi_name || 'Dr. Aanchal Singh'}</span>
                 <span className="text-[10px] text-emerald-400 block mt-0.5">AIIA Hospital, New Delhi</span>
               </div>
               <div className="bg-[#18273d] p-3 rounded-lg border border-slate-800">
                 <span className="text-slate-400 block text-[10px] uppercase font-bold">Herbal Formulation</span>
-                <span className="text-white font-semibold text-sm">{selectedStudyModal.herbalFormulation}</span>
+                <span className="text-white font-semibold text-sm">{selectedStudyModal.herbalFormulation || selectedStudyModal.herbal_formulation}</span>
                 <span className="text-[10px] text-cyan-300 block mt-0.5">Neon SQL Synchronized</span>
               </div>
             </div>
