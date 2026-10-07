@@ -13,8 +13,7 @@ import {
   CheckCircle,
   RotateCcw,
   GraduationCap,
-  ChevronRight,
-  User
+  ChevronRight
 } from 'lucide-react';
 
 import CreateStudyModal from '@/components/CreateStudyModal';
@@ -33,7 +32,6 @@ export default function FullDashboardPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
 
-  // Active Doctor/User Profile State
   const [currentUser, setCurrentUser] = useState<any>({
     fullName: 'Dr. Aanchal Singh',
     roleTitle: 'Principal Investigator (PI)',
@@ -44,9 +42,6 @@ export default function FullDashboardPage() {
     avatarUrl: '/doctor.jpg'
   });
 
-  const [imgError, setImgError] = useState(false);
-
-  // Auth Guard
   useEffect(() => {
     const authUser = localStorage.getItem('aiia_auth_user');
     if (!authUser) {
@@ -54,10 +49,7 @@ export default function FullDashboardPage() {
     } else {
       try {
         const parsed = JSON.parse(authUser);
-        if (parsed.fullName) {
-          setCurrentUser(parsed);
-          setImgError(false);
-        }
+        if (parsed.fullName) setCurrentUser(parsed);
       } catch (err) {
         console.error(err);
       }
@@ -142,9 +134,22 @@ export default function FullDashboardPage() {
     window.open('/api/export-report', '_blank');
   };
 
-  // Helper avatar generator per doctor role
-  const isAanchal = currentUser?.fullName?.includes('Aanchal');
-  const isAnanya = currentUser?.fullName?.includes('Ananya');
+  const getProfileAvatarSrc = () => {
+    if (currentUser?.avatarUrl) return currentUser.avatarUrl;
+    if (currentUser?.fullName?.includes('Ananya')) {
+      return 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=250&auto=format&fit=crop&q=80';
+    }
+    if (currentUser?.fullName?.includes('Pooja')) {
+      return 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=250&auto=format&fit=crop&q=80';
+    }
+    if (currentUser?.fullName?.includes('Raman')) {
+      return 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=250&auto=format&fit=crop&q=80';
+    }
+    if (currentUser?.fullName?.includes('Meena')) {
+      return 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=250&auto=format&fit=crop&q=80';
+    }
+    return '/doctor.jpg';
+  };
 
   return (
     <div className={`flex h-screen w-screen overflow-hidden font-sans transition-colors duration-300 ${
@@ -169,41 +174,22 @@ export default function FullDashboardPage() {
             />
           ) : (
             <>
-              {/* Doctor Welcome Banner with Guaranteed Non-Broken Figure */}
+              {/* Doctor Welcome Banner */}
               <div className={`rounded-xl p-4 flex justify-between items-center shadow-lg transition-all duration-300 border ${
                 darkMode
                   ? 'bg-gradient-to-r from-[#111e33] via-[#132c45] to-[#0d1c2c] border-cyan-500/30 text-white shadow-cyan-950/40'
                   : 'bg-gradient-to-r from-[#044e39] via-[#056349] to-[#0f766e] border-emerald-600/30 text-white shadow-emerald-950/20'
               }`}>
                 <div className="flex items-center gap-3.5">
-                  <div className={`w-14 h-14 rounded-full overflow-hidden border-2 shadow-md flex-shrink-0 flex items-center justify-center ${
-                    darkMode ? 'border-cyan-400 bg-slate-900 shadow-cyan-500/40' : 'border-emerald-300 bg-emerald-950'
+                  <div className={`w-14 h-14 rounded-full overflow-hidden border-2 shadow-md flex-shrink-0 bg-slate-800 flex items-center justify-center ${
+                    darkMode ? 'border-cyan-400 shadow-cyan-500/40' : 'border-emerald-300'
                   }`}>
-                    {isAanchal ? (
-                      <img
-                        src="/doctor.jpg"
-                        alt="Dr. Aanchal Singh"
-                        className="w-full h-full object-cover object-top"
-                      />
-                    ) : isAnanya ? (
-                      /* Dr. Ananya Joshi Dedicated Vector Medical Physician Figure */
-                      <div className="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-700 flex items-center justify-center text-white font-bold text-lg select-none">
-                        AJ
-                      </div>
-                    ) : !imgError && currentUser?.avatarUrl ? (
-                      <img
-                        src={currentUser.avatarUrl}
-                        alt={currentUser.fullName}
-                        onError={() => setImgError(true)}
-                        className="w-full h-full object-cover object-top"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-slate-800 flex items-center justify-center text-cyan-300 font-bold text-sm">
-                        {currentUser?.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'MD'}
-                      </div>
-                    )}
+                    <img
+                      src={getProfileAvatarSrc()}
+                      alt={currentUser?.fullName || 'Clinical Investigator'}
+                      className="w-full h-full object-cover object-top"
+                    />
                   </div>
-
                   <div>
                     <div className="flex items-center gap-2">
                       <h1 className="text-base font-extrabold text-white tracking-tight">Welcome, {currentUser?.fullName}</h1>

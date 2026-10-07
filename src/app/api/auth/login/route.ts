@@ -6,6 +6,9 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+const ANANYA_AVATAR = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=250&auto=format&fit=crop&q=80';
+const POOJA_AVATAR = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=250&auto=format&fit=crop&q=80';
+
 const AUTHORIZED_INVESTIGATORS: Record<string, {
   pass: string;
   name: string;
@@ -26,16 +29,6 @@ const AUTHORIZED_INVESTIGATORS: Record<string, {
     councilRegNo: 'DBCP/2018/AY-48912',
     avatarUrl: '/doctor.jpg'
   },
-  'ananya.joshi@aiia.gov.in': {
-    pass: 'Pv@2026#Officer',
-    name: 'Dr. Ananya Joshi',
-    role: 'Pharmacovigilance Officer (NPvCC)',
-    degrees: 'BAMS, MD (Dravyaguna Vigyana)',
-    specialization: 'Herbal Safety Surveillance, WHO-UMC Causality & MedDRA',
-    department: 'National Pharmacovigilance Centre for ASU Drugs (NPvCC)',
-    councilRegNo: 'UPBC/2016/AY-77218',
-    avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=250&auto=format&fit=crop&q=80'
-  },
   'sk.raman@aiia.gov.in': {
     pass: 'Cra@2026#Monitor',
     name: 'Dr. S. K. Raman',
@@ -45,6 +38,26 @@ const AUTHORIZED_INVESTIGATORS: Record<string, {
     department: 'Centre for Good Clinical Practice, AIIA',
     councilRegNo: 'MCI/2012/MED-39014',
     avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=250&auto=format&fit=crop&q=80'
+  },
+  'p.verma@aiia.gov.in': {
+    pass: 'Data@2026#Manager',
+    name: 'Pooja Verma',
+    role: 'Clinical Data Manager',
+    degrees: 'M.Sc (Biostatistics), CDISC Certified Professional',
+    specialization: 'eCRF Validation, CDISC SDTM/ADaM, Database Lock (DBL)',
+    department: 'Division of Biostatistics & Data Operations, AIIA',
+    councilRegNo: 'ISCR/DATA/2020/0912',
+    avatarUrl: POOJA_AVATAR
+  },
+  'ananya.joshi@aiia.gov.in': {
+    pass: 'Pv@2026#Officer',
+    name: 'Dr. Ananya Joshi',
+    role: 'Pharmacovigilance Officer (NPvCC)',
+    degrees: 'BAMS, MD (Dravyaguna Vigyana)',
+    specialization: 'Herbal Safety Surveillance, WHO-UMC Causality & MedDRA',
+    department: 'National Pharmacovigilance Centre for ASU Drugs (NPvCC)',
+    councilRegNo: 'UPBC/2016/AY-77218',
+    avatarUrl: ANANYA_AVATAR
   },
   'r.meena@cdsco.nic.in': {
     pass: 'Cdsco@2026#Auditor',
@@ -93,10 +106,7 @@ export async function POST(req: Request) {
             avatar_url TEXT,
             last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           );
-        `);
 
-        // Force insert/update so Dr. Ananya Joshi is guaranteed to be in Neon
-        await client.query(`
           INSERT INTO system_credentials (email, password_hash, full_name, role_title, degrees, specialization, department, council_reg_no, avatar_url, last_login)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
           ON CONFLICT (email) DO UPDATE SET
@@ -124,7 +134,7 @@ export async function POST(req: Request) {
         client.release();
       }
     } catch (dbErr) {
-      console.warn("Neon credentials sync warning:", dbErr);
+      console.warn("Neon credentials sync notice:", dbErr);
     }
 
     const userPayload = {

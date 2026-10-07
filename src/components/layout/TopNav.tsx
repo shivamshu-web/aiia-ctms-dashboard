@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, Sun, Moon, LogOut, Award, Stethoscope } from 'lucide-react';
+import { Search, Bell, Sun, Moon, LogOut } from 'lucide-react';
 
 interface TopNavProps {
   darkMode?: boolean;
@@ -14,7 +14,6 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
   const [currentUser, setCurrentUser] = useState<any>({
     fullName: 'Dr. Aanchal Singh',
     roleTitle: 'Principal Investigator (PI)',
-    degrees: 'BAMS, MD (Kayachikitsa)',
     avatarUrl: '/doctor.jpg'
   });
 
@@ -36,11 +35,27 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
     router.push('/login');
   };
 
+  const getAvatarSrc = () => {
+    if (currentUser?.avatarUrl) return currentUser.avatarUrl;
+    if (currentUser?.fullName?.includes('Ananya')) {
+      return 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=250&auto=format&fit=crop&q=80';
+    }
+    if (currentUser?.fullName?.includes('Pooja')) {
+      return 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=250&auto=format&fit=crop&q=80';
+    }
+    if (currentUser?.fullName?.includes('Raman')) {
+      return 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=250&auto=format&fit=crop&q=80';
+    }
+    if (currentUser?.fullName?.includes('Meena')) {
+      return 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=250&auto=format&fit=crop&q=80';
+    }
+    return '/doctor.jpg';
+  };
+
   return (
     <header className={`h-14 border-b px-5 flex items-center justify-between select-none shadow-sm transition-colors duration-300 z-10 ${
       darkMode ? 'bg-[#0f172a] border-slate-800 text-slate-100' : 'bg-white border-slate-200/90 text-slate-800'
     }`}>
-      {/* Left: System Title & Sub-tagline */}
       <div className="flex flex-col">
         <h1 className={`text-sm font-extrabold tracking-tight leading-tight ${
           darkMode ? 'text-white' : 'text-slate-900'
@@ -54,7 +69,6 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
         </p>
       </div>
 
-      {/* Center: Search Bar */}
       <div className="flex-1 max-w-md mx-6">
         <div className="relative flex items-center">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none"/>
@@ -75,7 +89,6 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
         </div>
       </div>
 
-      {/* Right: Theme Toggle, Notifications, Doctor Profile & Logout */}
       <div className="flex items-center gap-3">
         {setDarkMode && (
           <button
@@ -87,7 +100,6 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
                 ? 'bg-[#1e293b] text-amber-300 hover:bg-[#334155] border border-slate-700'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
             }`}
-            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {darkMode ? <Sun className="w-4 h-4 text-amber-400"/> : <Moon className="w-4 h-4 text-slate-700"/>}
           </button>
@@ -110,10 +122,9 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
         }`}>
           <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-emerald-500 shadow-sm flex-shrink-0 bg-slate-800">
             <img
-              src={currentUser.avatarUrl || '/doctor.jpg'}
+              src={getAvatarSrc()}
               alt={currentUser.fullName}
               className="w-full h-full object-cover object-top"
-              onError={(e: any) => { e.target.src = '/doctor.jpg'; }}
             />
           </div>
           <div className="text-right">
@@ -130,7 +141,6 @@ export default function TopNav({ darkMode = false, setDarkMode }: TopNavProps) {
           </div>
         </div>
 
-        {/* Secure Sign Out Button */}
         <button
           type="button"
           onClick={handleLogout}
