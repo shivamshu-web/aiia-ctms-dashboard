@@ -1,43 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Lock, Mail, Loader2, Leaf, KeyRound, AlertCircle, CheckCircle2, Stethoscope, Award, FileBadge } from 'lucide-react';
-
-const AUTHORIZED_INVESTIGATORS = [
-  {
-    name: 'Dr. Aanchal Singh',
-    email: 'aanchal.singh@aiia.gov.in',
-    pass: 'Aiia@2026#PI',
-    role: 'Principal Investigator (PI)',
-    degrees: 'BAMS, MD (Kayachikitsa)',
-    dept: 'Dept of Clinical Research, AIIA'
-  },
-  {
-    name: 'Dr. S. K. Raman',
-    email: 'sk.raman@aiia.gov.in',
-    pass: 'Cra@2026#Monitor',
-    role: 'Lead CRA / Clinical Monitor',
-    degrees: 'MBBS, MD (Pharmacology)',
-    dept: 'GCP Site Monitoring Centre'
-  },
-  {
-    name: 'Dr. Ananya Joshi',
-    email: 'ananya.joshi@aiia.gov.in',
-    pass: 'Pv@2026#Officer',
-    role: 'Pharmacovigilance Officer',
-    degrees: 'BAMS, MD (Dravyaguna)',
-    dept: 'National PV Centre (NPvCC)'
-  },
-  {
-    name: 'Rajesh K. Meena',
-    email: 'r.meena@cdsco.nic.in',
-    pass: 'Cdsco@2026#Auditor',
-    role: 'Regulatory Inspector',
-    degrees: 'M.Pharm (Regulatory Affairs)',
-    dept: 'CDSCO Central Licensing Node'
-  }
-];
+import { ShieldCheck, Lock, Mail, Loader2, Leaf, KeyRound, AlertCircle, CheckCircle2, Stethoscope, FileBadge } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,6 +10,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState('Aiia@2026#PI');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [authorizedList, setAuthorizedList] = useState<any[]>([]);
+  const [fetchingUsers, setFetchingUsers] = useState(true);
+
+  // Fetch strictly authorized personnel live from Neon SQL
+  useEffect(() => {
+    fetch('/api/auth/users')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.users && data.users.length > 0) {
+          setAuthorizedList(data.users);
+          setEmail(data.users[0].email);
+          setPassword(data.users[0].default_pass || 'Aiia@2026#PI');
+        }
+        setFetchingUsers(false);
+      })
+      .catch(() => setFetchingUsers(false));
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,9 +54,9 @@ export default function LoginPage() {
     }
   };
 
-  const selectDoctor = (inv: typeof AUTHORIZED_INVESTIGATORS[0]) => {
-    setEmail(inv.email);
-    setPassword(inv.pass);
+  const selectAuthorizedUser = (user: any) => {
+    setEmail(user.email);
+    setPassword(user.default_pass || 'Aiia@2026#PI');
     setErrorMsg('');
   };
 
@@ -95,11 +77,11 @@ export default function LoginPage() {
         </div>
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
           <ShieldCheck className="w-4 h-4 text-emerald-400"/>
-          <span className="hidden sm:inline">21 CFR Part 11 Encrypted Clinical Gateway</span>
+          <span className="hidden sm:inline">21 CFR Part 11 Live Database Gateway</span>
         </div>
       </header>
 
-      {/* Center Auth Box */}
+      {/* Center Auth Card */}
       <main className="flex-1 flex items-center justify-center p-4 z-10">
         <div className="w-full max-w-lg bg-[#0f1f33] border border-slate-700/80 rounded-2xl p-6 shadow-2xl backdrop-blur-xl space-y-5">
           <div className="text-center space-y-1">
@@ -167,37 +149,44 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Institutional Directory */}
+          {/* Directory strictly rendered from Neon Database */}
           <div className="pt-3 border-t border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider font-bold">
               <span className="flex items-center gap-1.5 text-cyan-300">
                 <Stethoscope className="w-3.5 h-3.5"/>
-                Authorized Clinical Faculty Directory:
+                Authorized Faculty (Live Neon DB):
               </span>
               <span className="text-emerald-400">Click to Select</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              {AUTHORIZED_INVESTIGATORS.map((inv) => (
-                <button
-                  key={inv.email}
-                  type="button"
-                  onClick={() => selectDoctor(inv)}
-                  className={`p-2.5 rounded-xl bg-[#162a42] hover:bg-[#1f3a5c] text-left border transition cursor-pointer ${
-                    email.toLowerCase() === inv.email.toLowerCase()
-                      ? 'border-cyan-400 shadow-md shadow-cyan-950/50 ring-1 ring-cyan-400/40'
-                      : 'border-slate-700/60'
-                  }`}
-                >
-                  <div className="font-bold text-white flex items-center justify-between">
-                    <span>{inv.name}</span>
-                    <FileBadge className="w-3 h-3 text-cyan-400"/>
-                  </div>
-                  <div className="text-[10px] text-emerald-400 font-semibold">{inv.degrees}</div>
-                  <div className="text-[9px] text-slate-400 truncate mt-0.5">{inv.role}</div>
-                </button>
-              ))}
-            </div>
+            {fetchingUsers ? (
+              <div className="flex items-center justify-center p-4 gap-2 text-xs text-slate-400">
+                <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+                <span>Querying Authorized Users from Neon SQL...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                {authorizedList.map((user) => (
+                  <button
+                    key={user.email}
+                    type="button"
+                    onClick={() => selectAuthorizedUser(user)}
+                    className={`p-2.5 rounded-xl bg-[#162a42] hover:bg-[#1f3a5c] text-left border transition cursor-pointer ${
+                      email.toLowerCase() === user.email.toLowerCase()
+                        ? 'border-cyan-400 shadow-md shadow-cyan-950/50 ring-1 ring-cyan-400/40'
+                        : 'border-slate-700/60'
+                    }`}
+                  >
+                    <div className="font-bold text-white flex items-center justify-between">
+                      <span className="truncate">{user.full_name}</span>
+                      <FileBadge className="w-3 h-3 text-cyan-400 shrink-0"/>
+                    </div>
+                    <div className="text-[10px] text-emerald-400 font-semibold truncate">{user.degrees}</div>
+                    <div className="text-[9px] text-slate-400 truncate mt-0.5">{user.role_title}</div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>
