@@ -13,7 +13,9 @@ import {
   CheckCircle,
   RotateCcw,
   GraduationCap,
-  ChevronRight
+  ChevronRight,
+  Info,
+  X
 } from 'lucide-react';
 
 import CreateStudyModal from '@/components/CreateStudyModal';
@@ -32,16 +34,26 @@ export default function FullDashboardPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
 
+  // Active Doctor/User Profile State
   const [currentUser, setCurrentUser] = useState<any>({
-    fullName: 'Dr. Aanchal Singh',
-    roleTitle: 'Principal Investigator (PI)',
-    degrees: 'BAMS, MD (Kayachikitsa), PhD',
-    specialization: 'Endocrinology, Metabolic Disorders & Clinical Rasayana',
-    department: 'Department of Clinical Research & Kayachikitsa, AIIA',
-    councilRegNo: 'DBCP/2018/AY-48912',
-    avatarUrl: '/doctor.jpg'
+    fullName: 'Rajesh K. Meena',
+    roleTitle: 'Regulatory Inspector (CDSCO)',
+    degrees: 'M.Pharm (Regulatory Affairs)',
+    specialization: 'NDCT Rules 2019, GCP-ASU Inspections & 21 CFR Part 11',
+    department: 'Central Drugs Standard Control Organisation (CDSCO), North Zone',
+    councilRegNo: 'CDSCO/GOI/AUD-9022',
+    avatarUrl: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=250&auto=format&fit=crop&q=80'
   });
 
+  // Chart Interactive States
+  const [activeEnrolmentLegend, setActiveEnrolmentLegend] = useState<'all' | 'enrolled' | 'screened'>('all');
+  const [hoveredBar, setHoveredBar] = useState<any | null>(null);
+  const [selectedMonthModal, setSelectedMonthModal] = useState<any | null>(null);
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
+  const [safetyTabMode, setSafetyTabMode] = useState<'ADR' | 'SAE'>('ADR');
+  const [hoveredSafetyCategory, setHoveredSafetyCategory] = useState<string | null>(null);
+
+  // Auth Guard
   useEffect(() => {
     const authUser = localStorage.getItem('aiia_auth_user');
     if (!authUser) {
@@ -93,7 +105,7 @@ export default function FullDashboardPage() {
         month: 'short',
         year: 'numeric',
       })
-    : 'Thu, 1 Oct 2026';
+    : 'Wed, 7 Oct 2026';
 
   const formattedTime = currentDateTime
     ? currentDateTime.toLocaleTimeString('en-IN', {
@@ -102,7 +114,7 @@ export default function FullDashboardPage() {
         second: '2-digit',
         hour12: false,
       }) + ' IST'
-    : '00:00:00 IST';
+    : '20:14:06 IST';
 
   // Modals
   const [isCreateStudyOpen, setIsCreateStudyOpen] = useState(false);
@@ -150,6 +162,27 @@ export default function FullDashboardPage() {
     }
     return '/doctor.jpg';
   };
+
+  // Trend Chart Data (Interactive & Dynamic)
+  const enrolmentTrendData = [
+    { m: 'Apr 2026', e: 35, s: 48, target: 50, enrolledCount: 142, screenedCount: 195 },
+    { m: 'May 2026', e: 55, s: 68, target: 70, enrolledCount: 228, screenedCount: 310 },
+    { m: 'Jun 2026', e: 70, s: 80, target: 85, enrolledCount: 485, screenedCount: 560 },
+    { m: 'Jul 2026', e: 85, s: 92, target: 95, enrolledCount: 690, screenedCount: 780 },
+    { m: 'Aug 2026', e: 94, s: 100, target: 100, enrolledCount: 840, screenedCount: 920 },
+    { m: 'Sep 2026', e: 105, s: 112, target: 110, enrolledCount: 985, screenedCount: 1085 },
+  ];
+
+  // Safety breakdown depending on ADR / SAE selection
+  const currentSafetyStats = safetyTabMode === 'ADR' 
+    ? { mild: 4, moderate: 2, serious: 1, pending: 1, total: 8 }
+    : { mild: 0, moderate: 1, serious: 2, pending: 0, total: 3 };
+
+  // Filter clinical studies if a status donut wedge is clicked
+  const activeStudiesList = (data?.studies || []).filter((s: any) => {
+    if (!selectedStatusFilter) return true;
+    return (s.status || '').toLowerCase() === selectedStatusFilter.toLowerCase();
+  });
 
   return (
     <div className={`flex h-screen w-screen overflow-hidden font-sans transition-colors duration-300 ${
@@ -236,6 +269,7 @@ export default function FullDashboardPage() {
               {/* 12-Col Dashboard Grid */}
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-9 space-y-4">
+                  {/* KPI Metrics */}
                   <div className="grid grid-cols-6 gap-2.5">
                     <MetricCard title="Total Studies" value={data?.metrics?.totalStudies ?? '5'} sub="↑ 2 new this month" dotColor="bg-blue-400" valueColor={darkMode ? "text-blue-400" : "text-slate-900"} accent="border-t-blue-500" darkMode={darkMode} />
                     <MetricCard title="Active Patients" value={data?.metrics?.activePatients ?? '985'} sub="↑ 12% this month" dotColor="bg-emerald-400" valueColor={darkMode ? "text-emerald-400" : "text-slate-900"} accent="border-t-emerald-500" darkMode={darkMode} />
@@ -245,71 +279,174 @@ export default function FullDashboardPage() {
                     <MetricCard title="Milestones" value={data?.metrics?.upcomingMilestones ?? '5'} sub="View All →" dotColor="bg-rose-400" valueColor={darkMode ? "text-rose-400" : "text-slate-900"} accent="border-t-rose-500" darkMode={darkMode} />
                   </div>
 
+                  {/* CHARTS ROW (Interactive & Working) */}
                   <div className="grid grid-cols-12 gap-4">
-                    <div className={`col-span-7 border rounded-xl p-3.5 shadow-md transition-colors duration-300 ${
+                    {/* CHART 1: Study Enrolment Trend (Fully Interactive Bar Chart) */}
+                    <div className={`col-span-7 border rounded-xl p-3.5 shadow-md transition-colors duration-300 flex flex-col justify-between ${
                       darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                     }`}>
-                      <div className="flex justify-between items-center mb-3">
-                        <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
-                          Study Enrolment Trend
-                        </span>
-                        <div className="flex items-center gap-3 text-[10px]">
-                          <span className={`flex items-center gap-1 font-semibold ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}><span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>Enrolled</span>
-                          <span className={`flex items-center gap-1 font-semibold ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}><span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>Screened</span>
-                          <span className={`flex items-center gap-1 font-semibold ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Target</span>
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <div>
+                            <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
+                              Study Enrolment Trend
+                            </span>
+                            <span className="text-[10px] text-slate-400 block">Click any month to inspect cohort details</span>
+                          </div>
+
+                          {/* Interactive Filter Toggles */}
+                          <div className="flex items-center gap-2 text-[10px]">
+                            <button
+                              type="button"
+                              onClick={() => setActiveEnrolmentLegend(activeEnrolmentLegend === 'enrolled' ? 'all' : 'enrolled')}
+                              className={`flex items-center gap-1 font-semibold px-2 py-0.5 rounded cursor-pointer transition ${
+                                activeEnrolmentLegend === 'enrolled'
+                                  ? 'bg-blue-500/20 border border-blue-500 text-blue-400'
+                                  : darkMode ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                              }`}
+                            >
+                              <span className="w-2 h-2 rounded-full bg-blue-500"></span>Enrolled
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveEnrolmentLegend(activeEnrolmentLegend === 'screened' ? 'all' : 'screened')}
+                              className={`flex items-center gap-1 font-semibold px-2 py-0.5 rounded cursor-pointer transition ${
+                                activeEnrolmentLegend === 'screened'
+                                  ? 'bg-purple-500/20 border border-purple-500 text-purple-400'
+                                  : darkMode ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                              }`}
+                            >
+                              <span className="w-2 h-2 rounded-full bg-purple-500"></span>Screened
+                            </button>
+                            <span className={`flex items-center gap-1 font-semibold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>Target (100%)
+                            </span>
+                          </div>
                         </div>
+
+                        {/* Interactive Tooltip Area */}
+                        {hoveredBar && (
+                          <div className="bg-[#18273d] p-1.5 px-3 rounded-lg border border-slate-700 text-[10px] flex items-center justify-between text-slate-200 animate-fadeIn mb-1">
+                            <span className="font-bold text-cyan-300">{hoveredBar.m}:</span>
+                            <span>Enrolled: <strong className="text-blue-400">{hoveredBar.enrolledCount}</strong> ({hoveredBar.e}%)</span>
+                            <span>Screened: <strong className="text-purple-400">{hoveredBar.screenedCount}</strong> ({hoveredBar.s}%)</span>
+                            <span className="text-emerald-400 font-semibold">Target: {hoveredBar.target}%</span>
+                          </div>
+                        )}
                       </div>
-                      <div className={`h-44 flex items-end justify-between gap-3 px-2 pt-4 border-b text-[10px] font-semibold ${
+
+                      {/* Interactive Visual Bars */}
+                      <div className={`h-40 flex items-end justify-between gap-3 px-2 pt-2 border-b text-[10px] font-semibold relative ${
                         darkMode ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'
                       }`}>
-                        {[
-                          { m: 'Apr 2026', e: 35, s: 48 },
-                          { m: 'May 2026', e: 55, s: 68 },
-                          { m: 'Jun 2026', e: 70, s: 80 },
-                          { m: 'Jul 2026', e: 85, s: 92 },
-                          { m: 'Aug 2026', e: 94, s: 100 },
-                          { m: 'Sep 2026', e: 105, s: 112 },
-                        ].map((bar, i) => (
-                          <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
-                            <div className="w-full flex items-end justify-center gap-1.5 h-36">
-                              <div className="w-3.5 bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t shadow-sm" style={{ height: `${bar.e}%` }}></div>
-                              <div className="w-3.5 bg-gradient-to-t from-purple-600 to-purple-400 rounded-t shadow-sm" style={{ height: `${bar.s}%` }}></div>
+                        {enrolmentTrendData.map((bar, i) => (
+                          <div
+                            key={i}
+                            onClick={() => setSelectedMonthModal(bar)}
+                            onMouseEnter={() => setHoveredBar(bar)}
+                            onMouseLeave={() => setHoveredBar(null)}
+                            className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end cursor-pointer group"
+                            title={`Click for ${bar.m} breakdown`}
+                          >
+                            <div className="w-full flex items-end justify-center gap-1.5 h-32 group-hover:scale-105 transition-transform duration-200">
+                              {(activeEnrolmentLegend === 'all' || activeEnrolmentLegend === 'enrolled') && (
+                                <div
+                                  className="w-3.5 bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t shadow-sm group-hover:brightness-125 transition"
+                                  style={{ height: `${Math.min(bar.e, 100)}%` }}
+                                ></div>
+                              )}
+                              {(activeEnrolmentLegend === 'all' || activeEnrolmentLegend === 'screened') && (
+                                <div
+                                  className="w-3.5 bg-gradient-to-t from-purple-600 to-purple-400 rounded-t shadow-sm group-hover:brightness-125 transition"
+                                  style={{ height: `${Math.min(bar.s, 100)}%` }}
+                                ></div>
+                              )}
                             </div>
-                            <span className="text-[9px]">{bar.m}</span>
+                            <span className={`text-[9px] group-hover:text-cyan-400 font-bold transition ${
+                              hoveredBar?.m === bar.m ? 'text-cyan-300' : ''
+                            }`}>
+                              {bar.m}
+                            </span>
                           </div>
                         ))}
                       </div>
                     </div>
 
+                    {/* CHART 2: Study Status Breakdown (Interactive Donut & Filter Engine) */}
                     <div className={`col-span-5 border rounded-xl p-3.5 flex flex-col justify-between shadow-md transition-colors duration-300 ${
                       darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                     }`}>
-                      <div className="flex justify-between items-center">
-                        <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
-                          Study Status Breakdown
-                        </span>
-                        <button type="button" onClick={refreshData} title="Refresh Data" className="text-slate-400 hover:text-cyan-400 transition">
-                          <RotateCcw className={`w-3.5 h-3.5 cursor-pointer ${loading ? 'animate-spin' : ''}`} />
-                        </button>
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
+                            Study Status Breakdown
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedStatusFilter(null);
+                              refreshData();
+                            }}
+                            title="Reset Filter & Refresh"
+                            className="text-slate-400 hover:text-cyan-400 transition"
+                          >
+                            <RotateCcw className={`w-3.5 h-3.5 cursor-pointer ${loading ? 'animate-spin' : ''}`} />
+                          </button>
+                        </div>
+                        <span className="text-[10px] text-slate-400 block mb-2">Click status to filter protocols table</span>
                       </div>
-                      <div className="flex items-center justify-between py-2">
+
+                      <div className="flex items-center justify-between py-1">
+                        {/* Dynamic Donut Graphic */}
                         <div className="relative w-28 h-28 flex items-center justify-center">
-                          <div className="w-28 h-28 rounded-full border-[12px] border-emerald-500 border-t-blue-500 border-r-amber-500 border-b-purple-500 shadow-md"></div>
-                          <div className="absolute text-center">
-                            <span className={`text-xl font-black leading-none ${darkMode ? 'text-white' : 'text-slate-900'}`}>{data?.metrics?.totalStudies ?? '5'}</span>
-                            <p className={`text-[9px] font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Total Studies</p>
+                          <div className="w-28 h-28 rounded-full border-[12px] border-emerald-500 border-t-blue-500 border-r-amber-500 border-b-purple-500 shadow-md hover:scale-105 transition-transform duration-300"></div>
+                          <div className="absolute text-center select-none">
+                            <span className={`text-xl font-black leading-none ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                              {selectedStatusFilter ? activeStudiesList.length : (data?.metrics?.totalStudies ?? '5')}
+                            </span>
+                            <p className={`text-[9px] font-bold ${selectedStatusFilter ? 'text-cyan-400' : darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                              {selectedStatusFilter ? selectedStatusFilter : 'Total Studies'}
+                            </p>
                           </div>
                         </div>
+
+                        {/* Interactive Status Selectors */}
                         <div className="text-[11px] space-y-1.5 font-semibold">
-                          <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-1.5 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Planning</span><span>1</span></div>
-                          <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-1.5 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>Ongoing</span><span>3</span></div>
-                          <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-1.5 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-500"></span>On Hold</span><span>1</span></div>
-                          <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-1.5 text-purple-400"><span className="w-2 h-2 rounded-full bg-purple-500"></span>Completed</span><span>0</span></div>
+                          {[
+                            { name: 'Planning', count: 1, color: 'text-blue-400', dot: 'bg-blue-500' },
+                            { name: 'Ongoing', count: 3, color: 'text-emerald-400', dot: 'bg-emerald-500' },
+                            { name: 'On Hold', count: 1, color: 'text-amber-400', dot: 'bg-amber-500' },
+                            { name: 'Completed', count: 0, color: 'text-purple-400', dot: 'bg-purple-500' }
+                          ].map((item) => (
+                            <div
+                              key={item.name}
+                              onClick={() => setSelectedStatusFilter(selectedStatusFilter === item.name ? null : item.name)}
+                              className={`flex items-center justify-between gap-4 px-2 py-0.5 rounded cursor-pointer transition select-none ${
+                                selectedStatusFilter === item.name
+                                  ? 'bg-[#18273d] ring-1 ring-cyan-400 text-white font-bold'
+                                  : 'hover:bg-slate-800/40'
+                              }`}
+                            >
+                              <span className={`flex items-center gap-1.5 ${item.color}`}>
+                                <span className={`w-2 h-2 rounded-full ${item.dot}`}></span>
+                                {item.name}
+                              </span>
+                              <span>{item.count}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
+
+                      {selectedStatusFilter && (
+                        <div className="flex justify-between items-center text-[10px] bg-cyan-950/40 border border-cyan-800/50 p-1.5 rounded mt-2">
+                          <span className="text-cyan-300">Showing only <strong>{selectedStatusFilter}</strong></span>
+                          <button onClick={() => setSelectedStatusFilter(null)} className="text-slate-400 hover:text-white font-bold">Clear</button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
+                  {/* ACTIVE STUDIES TABLE (Filtered Automatically by Status Donut) */}
                   <div className="grid grid-cols-12 gap-4">
                     <div className={`col-span-8 border rounded-xl p-3.5 shadow-md transition-colors duration-300 ${
                       darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
@@ -338,7 +475,7 @@ export default function FullDashboardPage() {
                             </tr>
                           </thead>
                           <tbody className={`divide-y ${darkMode ? 'divide-slate-800 text-slate-200' : 'divide-slate-200/70 text-slate-800'}`}>
-                            {(data?.studies || []).map((row: any) => (
+                            {activeStudiesList.map((row: any) => (
                               <tr key={row.studyId} className={darkMode ? 'hover:bg-slate-800/60 transition' : 'hover:bg-slate-50 transition'}>
                                 <td className="px-2.5 py-2 font-bold text-cyan-400">{row.studyId}</td>
                                 <td className={`px-2.5 py-2 font-semibold max-w-[200px] truncate ${darkMode ? 'text-white' : 'text-slate-900'}`}>{row.title}</td>
@@ -347,7 +484,11 @@ export default function FullDashboardPage() {
                                 <td className="px-2.5 py-2 font-bold text-emerald-400">{`${row.enrolled} / ${row.target}`}</td>
                                 <td className="px-2.5 py-2">
                                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                                    darkMode ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-emerald-100/80 border-emerald-300 text-emerald-800'
+                                    row.status === 'Ongoing'
+                                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                      : row.status === 'On Hold'
+                                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                                      : 'bg-blue-500/10 border-blue-500/30 text-cyan-300'
                                   }`}>
                                     {row.status}
                                   </span>
@@ -362,6 +503,7 @@ export default function FullDashboardPage() {
                       </div>
                     </div>
 
+                    {/* CHART 3: Safety Overview (Interactive Toggle & Live Donut) */}
                     <div className={`col-span-4 border rounded-xl p-3.5 flex flex-col justify-between shadow-md transition-colors duration-300 ${
                       darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                     }`}>
@@ -370,26 +512,68 @@ export default function FullDashboardPage() {
                           <span className={`text-xs font-bold tracking-wide ${darkMode ? 'text-slate-100 font-extrabold' : 'text-slate-900 font-extrabold'}`}>
                             Safety Overview
                           </span>
-                          <div className="flex gap-1 text-[10px]">
-                            <span className="bg-emerald-600 text-white font-bold px-2 py-0.5 rounded shadow-sm">ADR</span>
-                            <span className="text-slate-400 font-semibold px-2 py-0.5">SAE</span>
+                          {/* Interactive ADR / SAE Tab Switcher */}
+                          <div className="flex gap-1 text-[10px] bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+                            <button
+                              type="button"
+                              onClick={() => setSafetyTabMode('ADR')}
+                              className={`px-2 py-0.5 rounded font-bold transition cursor-pointer ${
+                                safetyTabMode === 'ADR'
+                                  ? 'bg-emerald-600 text-white shadow-sm'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              ADR
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSafetyTabMode('SAE')}
+                              className={`px-2 py-0.5 rounded font-bold transition cursor-pointer ${
+                                safetyTabMode === 'SAE'
+                                  ? 'bg-rose-600 text-white shadow-sm'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              SAE
+                            </button>
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between py-2">
-                          <div className="relative w-20 h-20 flex items-center justify-center">
+                          <div className="relative w-20 h-20 flex items-center justify-center hover:scale-105 transition-transform duration-200">
                             <div className="w-20 h-20 rounded-full border-[8px] border-emerald-500 border-t-amber-400 border-r-rose-500 shadow-sm"></div>
-                            <div className="absolute text-center">
-                              <span className={`text-lg font-black leading-none ${darkMode ? 'text-white' : 'text-slate-900'}`}>{data?.metrics?.safetyReportsCount ?? '8'}</span>
-                              <p className={`text-[8px] font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Reports</p>
+                            <div className="absolute text-center select-none">
+                              <span className={`text-lg font-black leading-none ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                                {currentSafetyStats.total}
+                              </span>
+                              <p className={`text-[8px] font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                {safetyTabMode}s
+                              </p>
                             </div>
                           </div>
 
                           <div className="text-[10px] space-y-1 font-semibold">
-                            <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>Mild</span><span>4</span></div>
-                            <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Moderate</span><span>2</span></div>
-                            <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1 text-rose-400"><span className="w-2 h-2 rounded-full bg-rose-500"></span>Serious</span><span>1</span></div>
-                            <div className="flex items-center justify-between gap-3"><span className="flex items-center gap-1 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-500"></span>Pending</span><span>1</span></div>
+                            {[
+                              { label: 'Mild', val: currentSafetyStats.mild, color: 'text-emerald-400', dot: 'bg-emerald-500' },
+                              { label: 'Moderate', val: currentSafetyStats.moderate, color: 'text-blue-400', dot: 'bg-blue-500' },
+                              { label: 'Serious', val: currentSafetyStats.serious, color: 'text-rose-400', dot: 'bg-rose-500' },
+                              { label: 'Pending', val: currentSafetyStats.pending, color: 'text-amber-400', dot: 'bg-amber-500' }
+                            ].map((item) => (
+                              <div
+                                key={item.label}
+                                onMouseEnter={() => setHoveredSafetyCategory(item.label)}
+                                onMouseLeave={() => setHoveredSafetyCategory(null)}
+                                className={`flex items-center justify-between gap-3 px-1.5 py-0.5 rounded cursor-pointer transition ${
+                                  hoveredSafetyCategory === item.label ? 'bg-slate-800 text-white' : ''
+                                }`}
+                              >
+                                <span className={`flex items-center gap-1 ${item.color}`}>
+                                  <span className={`w-2 h-2 rounded-full ${item.dot}`}></span>
+                                  {item.label}
+                                </span>
+                                <span>{item.val}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -407,7 +591,7 @@ export default function FullDashboardPage() {
                   </div>
                 </div>
 
-                {/* Right 3 Cols */}
+                {/* Right 3 Cols: Quick Actions & Deadlines */}
                 <div className="col-span-3 space-y-4">
                   <div className={`border rounded-xl p-3.5 space-y-2 shadow-md transition-colors duration-300 ${
                     darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
@@ -468,6 +652,48 @@ export default function FullDashboardPage() {
           )}
         </main>
       </div>
+
+      {/* Monthly Cohort Inspection Popup Modal (Chart Bar Click) */}
+      {selectedMonthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-[#111c2e] border border-slate-700 rounded-2xl w-full max-w-md p-5 shadow-2xl text-slate-200 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-2.5">
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-sm font-bold text-white">{selectedMonthModal.m} — Cohort Inspection</h3>
+              </div>
+              <button onClick={() => setSelectedMonthModal(null)} className="text-slate-400 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              <div className="flex justify-between p-2 rounded bg-[#18273d]">
+                <span className="text-slate-400">Total Enrolled Subjects:</span>
+                <span className="font-bold text-blue-400">{selectedMonthModal.enrolledCount} Patients ({selectedMonthModal.e}%)</span>
+              </div>
+              <div className="flex justify-between p-2 rounded bg-[#18273d]">
+                <span className="text-slate-400">Total Screened Candidates:</span>
+                <span className="font-bold text-purple-400">{selectedMonthModal.screenedCount} Candidates ({selectedMonthModal.s}%)</span>
+              </div>
+              <div className="flex justify-between p-2 rounded bg-[#18273d]">
+                <span className="text-slate-400">Target Achievement:</span>
+                <span className="font-bold text-emerald-400">{selectedMonthModal.target}% on Schedule</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setSelectedMonthModal(null)}
+                className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       <CreateStudyModal isOpen={isCreateStudyOpen} onClose={() => setIsCreateStudyOpen(false)} onSuccess={refreshData} />
