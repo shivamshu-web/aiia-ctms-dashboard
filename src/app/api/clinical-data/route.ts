@@ -54,6 +54,7 @@ const MASTER_CLINICAL_DATA = {
       herbal_formulation: 'Chyawanprash Awaleha + Guduchi Swarasa',
       herbalFormulation: 'Chyawanprash Awaleha + Guduchi Swarasa',
       pi_name: 'Dr. Aanchal Singh',
+      piName: 'Dr. Aanchal Singh',
       iec_status: 'Approved',
       version: 'v1.4',
       crf_completeness: '96.2%',
@@ -77,6 +78,7 @@ const MASTER_CLINICAL_DATA = {
       herbal_formulation: 'Withania somnifera Extract (5% Withanolides)',
       herbalFormulation: 'Withania somnifera Extract (5% Withanolides)',
       pi_name: 'Dr. Aanchal Singh',
+      piName: 'Dr. Aanchal Singh',
       iec_status: 'Renewal Due',
       version: 'v1.2',
       crf_completeness: '91.8%',
@@ -100,6 +102,7 @@ const MASTER_CLINICAL_DATA = {
       herbal_formulation: 'Yogaraj Guggulu + Curcumin 95%',
       herbalFormulation: 'Yogaraj Guggulu + Curcumin 95%',
       pi_name: 'Dr. Aanchal Singh',
+      piName: 'Dr. Aanchal Singh',
       iec_status: 'Approved',
       version: 'v1.0',
       crf_completeness: '99.1%',
@@ -123,6 +126,7 @@ const MASTER_CLINICAL_DATA = {
       herbal_formulation: 'Guduchi Ghana Vati',
       herbalFormulation: 'Guduchi Ghana Vati',
       pi_name: 'Dr. Aanchal Singh',
+      piName: 'Dr. Aanchal Singh',
       iec_status: 'Under Review',
       version: 'v1.0',
       crf_completeness: '84.0%',
@@ -348,11 +352,42 @@ export async function GET(req: Request) {
         if (msRes.rows && msRes.rows.length > 0) responseData.milestones = msRes.rows;
       } catch (e: any) {}
 
-      // 7. PV Reports
+      // 7. PV Safety Reports
       try {
         const pvRes = await client.query('SELECT * FROM pv_safety_reports ORDER BY id ASC');
         if (pvRes.rows && pvRes.rows.length > 0) responseData.pvReports = pvRes.rows;
       } catch (e: any) {}
+
+      // 7.1 PV Periodic Reports (Direct Neon Query & Auto-Seed)
+      try {
+        const perRes = await client.query('SELECT * FROM pv_periodic_reports ORDER BY id ASC');
+        if (perRes.rows && perRes.rows.length > 0) {
+          responseData.periodicReports = perRes.rows;
+        } else {
+          await client.query(`
+            CREATE TABLE IF NOT EXISTS pv_periodic_reports (
+              id SERIAL PRIMARY KEY,
+              report_code VARCHAR(50) UNIQUE NOT NULL,
+              title TEXT NOT NULL,
+              reporting_period VARCHAR(100) NOT NULL,
+              total_exposure_subjects INT NOT NULL,
+              total_ae_recorded INT NOT NULL,
+              benefit_risk_conclusion VARCHAR(100) DEFAULT 'Favourable Benefit-Risk',
+              submission_status VARCHAR(50) DEFAULT 'Approved by NPvCC',
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            INSERT INTO pv_periodic_reports (report_code, title, reporting_period, total_exposure_subjects, total_ae_recorded, benefit_risk_conclusion, submission_status) VALUES
+            ('PSUR-2026-H1', 'Periodic Safety Update Report: Nishamalaki Protocol', '01 Jan 2026 - 30 Jun 2026', 412, 14, 'Favourable Benefit-Risk', 'Approved by NPvCC'),
+            ('PSUR-2026-H2', 'Periodic Safety Update Report: Rasayana Oncology Adjuvant', '01 Apr 2026 - 30 Sep 2026', 248, 8, 'Favourable Benefit-Risk', 'Submitted to CDSCO'),
+            ('PBRER-2026-Q3', 'Periodic Benefit-Risk Evaluation Report: Ashwagandha Extract', '01 Jul 2026 - 30 Sep 2026', 196, 5, 'Acceptable Safety Margin', 'Approved by NPvCC')
+            ON CONFLICT (report_code) DO NOTHING;
+          `);
+          const freshPer = await client.query('SELECT * FROM pv_periodic_reports ORDER BY id ASC');
+          if (freshPer.rows && freshPer.rows.length > 0) responseData.periodicReports = freshPer.rows;
+        }
+      } catch (e: any) {
+        console.warn("PV periodic reports query note:", e.message);
+      }
 
       // 8. CTRI
       try {
