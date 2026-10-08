@@ -118,7 +118,7 @@ export default function ModuleViews({
 
   const fetchNeonData = () => {
     setLoading(true);
-    fetch(`/api/clinical-data?tab=${tab}`)
+    fetch(`/api/clinical-data?tab=${tab}&_t=${Date.now()}`, { cache: 'no-store' })
       .then((res) => res.json())
       .then((json) => {
         if (json.data && Object.keys(json.data).length > 0) {

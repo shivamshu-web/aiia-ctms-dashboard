@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
@@ -352,11 +355,15 @@ export async function GET(req: Request) {
         if (msRes.rows && msRes.rows.length > 0) responseData.milestones = msRes.rows;
       } catch (e: any) {}
 
-      // 7. PV Safety Reports
+      // 7. PV Safety Reports (Direct Neon Query - Live & Instant)
       try {
         const pvRes = await client.query('SELECT * FROM pv_safety_reports ORDER BY id ASC');
-        if (pvRes.rows && pvRes.rows.length > 0) responseData.pvReports = pvRes.rows;
-      } catch (e: any) {}
+        if (pvRes.rows && pvRes.rows.length > 0) {
+          responseData.pvReports = pvRes.rows;
+        }
+      } catch (e: any) {
+        console.warn("PV safety reports query note:", e.message);
+      }
 
       // 7.1 PV Periodic Reports (Direct Neon Query & Auto-Seed)
       try {
@@ -432,12 +439,18 @@ export async function GET(req: Request) {
     console.warn("Neon SQL Connection Warning:", error.message);
   }
 
-  // Guaranteed full payload returned every time
+  // Guaranteed fresh live data from Neon without browser or edge cache
   return NextResponse.json({
     success: true,
     dbConnected,
     source: dbConnected ? 'neon_postgres_live' : 'resilient_master_clinical_sync',
     data: responseData,
     studies: responseData.studies
+  }, {
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
   });
 }
