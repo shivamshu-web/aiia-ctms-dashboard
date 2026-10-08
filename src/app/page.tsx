@@ -15,7 +15,8 @@ import {
   GraduationCap,
   ChevronRight,
   Info,
-  X
+  X,
+  FileText
 } from 'lucide-react';
 
 import CreateStudyModal from '@/components/CreateStudyModal';
@@ -52,6 +53,7 @@ export default function FullDashboardPage() {
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
   const [safetyTabMode, setSafetyTabMode] = useState<'ADR' | 'SAE'>('ADR');
   const [hoveredSafetyCategory, setHoveredSafetyCategory] = useState<string | null>(null);
+  const [viewingProtocol, setViewingProtocol] = useState<any | null>(null);
 
   // Auth Guard
   useEffect(() => {
@@ -281,7 +283,7 @@ export default function FullDashboardPage() {
 
                   {/* CHARTS ROW (Interactive & Working) */}
                   <div className="grid grid-cols-12 gap-4">
-                    {/* CHART 1: Study Enrolment Trend (Fully Interactive Bar Chart) */}
+                    {/* CHART 1: Study Enrolment Trend (Advanced with Flat Aligned Labels) */}
                     <div className={`col-span-7 border rounded-xl p-3.5 shadow-md transition-colors duration-300 flex flex-col justify-between ${
                       darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                     }`}>
@@ -335,9 +337,9 @@ export default function FullDashboardPage() {
                         )}
                       </div>
 
-                      {/* Interactive Visual Bars */}
-                      <div className={`h-40 flex items-end justify-between gap-3 px-2 pt-2 border-b text-[10px] font-semibold relative ${
-                        darkMode ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'
+                      {/* Perfectly Flat Aligned Baseline Bars */}
+                      <div className={`h-44 flex items-end justify-between gap-2.5 px-3 pt-4 border-b relative select-none ${
+                        darkMode ? 'border-slate-800' : 'border-slate-200'
                       }`}>
                         {enrolmentTrendData.map((bar, i) => (
                           <div
@@ -345,28 +347,32 @@ export default function FullDashboardPage() {
                             onClick={() => setSelectedMonthModal(bar)}
                             onMouseEnter={() => setHoveredBar(bar)}
                             onMouseLeave={() => setHoveredBar(null)}
-                            className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end cursor-pointer group"
+                            className="flex-1 flex flex-col items-center justify-end h-full cursor-pointer group"
                             title={`Click for ${bar.m} breakdown`}
                           >
                             <div className="w-full flex items-end justify-center gap-1.5 h-32 group-hover:scale-105 transition-transform duration-200">
                               {(activeEnrolmentLegend === 'all' || activeEnrolmentLegend === 'enrolled') && (
                                 <div
-                                  className="w-3.5 bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t shadow-sm group-hover:brightness-125 transition"
+                                  className="w-3.5 bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t shadow-sm group-hover:brightness-125 transition-all"
                                   style={{ height: `${Math.min(bar.e, 100)}%` }}
                                 ></div>
                               )}
                               {(activeEnrolmentLegend === 'all' || activeEnrolmentLegend === 'screened') && (
                                 <div
-                                  className="w-3.5 bg-gradient-to-t from-purple-600 to-purple-400 rounded-t shadow-sm group-hover:brightness-125 transition"
+                                  className="w-3.5 bg-gradient-to-t from-purple-600 to-purple-400 rounded-t shadow-sm group-hover:brightness-125 transition-all"
                                   style={{ height: `${Math.min(bar.s, 100)}%` }}
                                 ></div>
                               )}
                             </div>
-                            <span className={`text-[9px] group-hover:text-cyan-400 font-bold transition ${
-                              hoveredBar?.m === bar.m ? 'text-cyan-300' : ''
-                            }`}>
-                              {bar.m}
-                            </span>
+                            <div className="h-6 flex items-center justify-center mt-1">
+                              <span className={`text-[9px] whitespace-nowrap font-bold transition-colors ${
+                                hoveredBar?.m === bar.m 
+                                  ? 'text-cyan-400' 
+                                  : darkMode ? 'text-slate-400 group-hover:text-slate-200' : 'text-slate-600 group-hover:text-slate-900'
+                              }`}>
+                                {bar.m}
+                              </span>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -493,8 +499,14 @@ export default function FullDashboardPage() {
                                     {row.status}
                                   </span>
                                 </td>
-                                <td className="px-2.5 py-2 text-cyan-400 font-bold cursor-pointer hover:underline">
-                                  View
+                                <td className="px-2.5 py-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setViewingProtocol(row)}
+                                    className="px-2.5 py-1 rounded bg-cyan-500/15 hover:bg-cyan-500/30 text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 text-[10px] font-bold transition cursor-pointer"
+                                  >
+                                    View
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -503,7 +515,7 @@ export default function FullDashboardPage() {
                       </div>
                     </div>
 
-                    {/* CHART 3: Safety Overview (Interactive Toggle & Live Donut) */}
+                    {/* CHART 3: Safety Overview (Interactive Toggle & Live ADR/SAE Connection) */}
                     <div className={`col-span-4 border rounded-xl p-3.5 flex flex-col justify-between shadow-md transition-colors duration-300 ${
                       darkMode ? 'bg-[#111c2e] border-slate-800' : 'bg-white border-slate-200/90'
                     }`}>
@@ -578,15 +590,27 @@ export default function FullDashboardPage() {
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => setIsPVOpen(true)}
-                        className={`w-full py-1.5 rounded-lg text-xs font-bold mt-2 transition cursor-pointer border ${
-                          darkMode ? 'bg-[#1b2b42] hover:bg-[#253d5e] text-cyan-300 border-slate-700' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300 shadow-xs'
-                        }`}
-                      >
-                        View PV Dashboard →
-                      </button>
+                      {/* Direct Connection to ADR / SAE Reporting module */}
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('safety-reporting')}
+                          className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition cursor-pointer border text-center ${
+                            darkMode ? 'bg-[#18273d] hover:bg-[#223652] text-cyan-300 border-slate-700' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300 shadow-xs'
+                          }`}
+                        >
+                          Open ADR / SAE Logs →
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsPVOpen(true)}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition cursor-pointer border text-center ${
+                            darkMode ? 'bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-200 border-cyan-800/60' : 'bg-teal-600 hover:bg-teal-500 text-white border-teal-700'
+                          }`}
+                        >
+                          PV Suite
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -689,6 +713,87 @@ export default function FullDashboardPage() {
                 className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs cursor-pointer"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Advanced Clinical Protocol Inspection Modal (Working View Action) */}
+      {viewingProtocol && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className={`w-full max-w-xl rounded-2xl border p-5 shadow-2xl space-y-4 ${
+            darkMode ? 'bg-[#111c2e] border-slate-700 text-slate-100' : 'bg-white border-slate-300 text-slate-800'
+          }`}>
+            <div className="flex justify-between items-start border-b pb-3 border-slate-700/60">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
+                    {viewingProtocol.studyId}
+                  </span>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
+                    viewingProtocol.status === 'Ongoing'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      : viewingProtocol.status === 'On Hold'
+                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                      : 'bg-blue-500/10 border-blue-500/30 text-cyan-300'
+                  }`}>
+                    {viewingProtocol.status}
+                  </span>
+                </div>
+                <h3 className="text-sm font-extrabold mt-1.5 leading-snug">{viewingProtocol.title}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingProtocol(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className={`p-3 rounded-xl border ${darkMode ? 'bg-[#18273d] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                <span className="text-[10px] text-slate-400 block font-bold uppercase">Clinical Trial Phase</span>
+                <span className="font-bold text-cyan-300 text-sm">{viewingProtocol.phase}</span>
+              </div>
+              <div className={`p-3 rounded-xl border ${darkMode ? 'bg-[#18273d] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                <span className="text-[10px] text-slate-400 block font-bold uppercase">Sites Participating</span>
+                <span className="font-bold text-white text-sm">{viewingProtocol.sitesCount} Multi-Centric Sites</span>
+              </div>
+              <div className={`p-3 rounded-xl border ${darkMode ? 'bg-[#18273d] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                <span className="text-[10px] text-slate-400 block font-bold uppercase">Enrolled / Target</span>
+                <span className="font-bold text-emerald-400 text-sm">{viewingProtocol.enrolled} / {viewingProtocol.target} Patients</span>
+              </div>
+              <div className={`p-3 rounded-xl border ${darkMode ? 'bg-[#18273d] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                <span className="text-[10px] text-slate-400 block font-bold uppercase">CTRI Registration</span>
+                <span className="font-mono font-bold text-amber-300 text-[11px]">{viewingProtocol.ctriNumber || 'CTRI/2025/03/048912'}</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-xl border text-xs space-y-1 ${darkMode ? 'bg-[#18273d] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Principal Investigator & Sponsor</span>
+              <p className="font-bold text-white">Dr. Aanchal Singh (PI) • All India Institute of Ayurveda</p>
+              <p className="text-[10px] text-slate-400">Regulatory Oversight: Ministry of Ayush & CDSCO Ethics Committee (21 CFR Part 11 Verified)</p>
+            </div>
+
+            <div className="flex justify-between items-center pt-2 border-t border-slate-700/60">
+              <button
+                type="button"
+                onClick={() => {
+                  setViewingProtocol(null);
+                  setActiveTab('study-management');
+                }}
+                className="text-xs text-cyan-400 hover:underline font-bold cursor-pointer"
+              >
+                Go to Full Study Management Module →
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewingProtocol(null)}
+                className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow cursor-pointer"
+              >
+                Done
               </button>
             </div>
           </div>
