@@ -55,6 +55,9 @@ export default function FullDashboardPage() {
   const [hoveredSafetyCategory, setHoveredSafetyCategory] = useState<string | null>(null);
   const [viewingProtocol, setViewingProtocol] = useState<any | null>(null);
 
+  // Auto-refresh trigger for ModuleViews tables
+  const [moduleRefreshKey, setModuleRefreshKey] = useState(0);
+
   // Auth Guard
   useEffect(() => {
     const authUser = localStorage.getItem('aiia_auth_user');
@@ -128,6 +131,8 @@ export default function FullDashboardPage() {
 
   const refreshData = () => {
     setLoading(true);
+    // Increment key to trigger instant re-fetch in ModuleViews
+    setModuleRefreshKey((prev) => prev + 1);
     fetch('/api/dashboard')
       .then((res) => res.json())
       .then((json) => {
@@ -200,6 +205,7 @@ export default function FullDashboardPage() {
         <main className="flex-1 overflow-y-auto p-4 space-y-4">
           {activeTab !== 'dashboard' ? (
             <ModuleViews
+              key={moduleRefreshKey}
               tab={activeTab}
               onBack={() => setActiveTab('dashboard')}
               studies={data?.studies || []}
